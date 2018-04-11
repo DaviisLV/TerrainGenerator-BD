@@ -1,9 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class TerrainGenerator : MonoBehaviour {
 
-    [Header("X = Width, Y = Height, Z = Length")]
-    public Vector3Int TerrainSize;
+    [HideInInspector]
+    public Vector3Int TerrainSizeData;
+    [HideInInspector]
+    public string FilePath;
+    [HideInInspector]
+    public bool _fileSelected = false;
+    [HideInInspector]
+    public bool _terrainSizeSelected = false;
+
 }
