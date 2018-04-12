@@ -20,17 +20,17 @@ public class TerrainGeneratorRTEditor : Editor
     {
         base.OnInspectorGUI();
 
-        if (_terGen._filePath == null)      
-            EditorGUILayout.HelpBox("Select file!", MessageType.Warning);       
+        if (_terGen._filePath == null)
+            EditorGUILayout.HelpBox("Select file!", MessageType.Warning);
         else
             EditorGUILayout.HelpBox("Selected file path: " + _terGen._filePath, MessageType.Info);
 
 
-        if (GUILayout.Button("Select terrain file"))      
+        if (GUILayout.Button("Select terrain file"))
             _terGen._filePath = EditorUtility.OpenFilePanel("Select terrain file", "", "raw");
 
 
-        if (_terGen._resalutionSelekted < 0)       
+        if (_terGen._resalutionSelekted < 0)
             EditorGUILayout.HelpBox("Select resalution!", MessageType.Warning);
 
         EditorGUILayout.HelpBox("Terrain resalution can be only the same as terrain file or smaller", MessageType.None);
@@ -64,17 +64,8 @@ public class TerrainGeneratorRTEditor : Editor
         _terGen._addTexture = EditorGUILayout.Toggle("Add Texture", _terGen._addTexture);
 
         if (_terGen._addTexture)
-        {
 
-          //  _terGen._textureCount = EditorGUILayout.IntField("texture count", _terGen._textureCount);
-            //for (int i = 0; i > _terGen._textureCount; i++)
-            //{
-            //    _terGen.TerTexture[i] = (Texture2D)EditorGUILayout.ObjectField("Texture", _terGen.TerTexture[i], typeof(Texture2D), false);
-            //}
-
-          //  _terGen.TerTexture[0] = (Texture2D) EditorGUILayout.ObjectField("Texture", _terGen.TerTexture[0], typeof(Texture2D), false);
             _terGen.TerTexture = (Texture2D)EditorGUILayout.ObjectField("Texture", _terGen.TerTexture, typeof(Texture2D), false);
-        }
     }
 
 

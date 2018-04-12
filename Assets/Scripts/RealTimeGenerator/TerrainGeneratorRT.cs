@@ -19,6 +19,10 @@ public class TerrainGeneratorRT : MonoBehaviour
     [HideInInspector]
     public bool _addTexture = false;
     [HideInInspector]
+    public bool _saveToAssets = false;
+    [HideInInspector]
+    public bool _saveToAssetsAsOneObj = true;
+    [HideInInspector]
     public bool _terrainSizeSelected = false;
     [HideInInspector]
     public int _splitCount;
@@ -34,6 +38,8 @@ public class TerrainGeneratorRT : MonoBehaviour
     public int _resalutionSelekted = -1;
     [HideInInspector]
     public int _textureCount = 0;
+    [HideInInspector]
+    public string _folderName;
 
     private GameObject _terrainOrigin;
     private TerrainData _terrainData;
@@ -52,12 +58,14 @@ public class TerrainGeneratorRT : MonoBehaviour
         Addtexturess(_terrainData);
         SplitTerrain();
         enableAll();
+
     }
 
     private void Update()
     {
         playerMove();
     }
+
 
 
     #region splited terrain generation
@@ -470,7 +478,5 @@ public class TerrainGeneratorRT : MonoBehaviour
         }
         centerTerrain.terrainData.SetHeights(0, 0, centerHeights);
     }
-
-    #endregion  
+    #endregion
 }
-
