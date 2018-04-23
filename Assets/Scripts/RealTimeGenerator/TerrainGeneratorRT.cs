@@ -49,15 +49,35 @@ public class TerrainGeneratorRT : MonoBehaviour
     private TerrainData _terrainData;
     private int _hightMapRezaliton = 0;
 
+    public int m_treeSpacing = 32; //spacing between trees
+    public float m_treeDistance = 2000.0f; //The distance at which trees will no longer be drawn
+    public float m_treeBillboardDistance = 400.0f; //The distance at which trees meshes will turn into tree billboards
+    public float m_treeCrossFadeLength = 20.0f; //As trees turn to billboards there transform is rotated to match the meshes, a higher number will make this transition smoother
+    public int m_treeMaximumFullLODCount = 400; //The maximum number of trees that will be drawn in a certain area. 
+
+
+    public GameObject[] trees;
+    private TreePrototype[] _treeData;
+
     public void Start()
     {
         _hightMapRezaliton = GetTerrainRezalution(_resalutionSelekted);
         _splitCount = _splitCountID + 2;
 
+        _treeData = new TreePrototype[trees.Length];
+        for (int i = 0; i < trees.Length; i++)
+        {
+            _treeData[i] = new TreePrototype();
+            _treeData[i].prefab = trees[i];
+        }
+
         CreateTerrain();
+        FillTreeInstances(_terrainOrigin.GetComponent<Terrain>(), 1, 1);
         Addtexturess(_terrainData);
         SplitTerrain();
         enableAll();
+        SetPlayerPozition();
+       
 
     }
 
@@ -66,6 +86,88 @@ public class TerrainGeneratorRT : MonoBehaviour
         playerMove();
     }
 
+    
+	void FillTreeInstances(Terrain terrain, int tileX, int tileZ)
+
+	{
+
+      
+
+        //Random.seed = 0;
+        int a = 0;
+        for (int x = 0; x < _terrainSizeData.z; x += m_treeSpacing) 
+		{
+			for (int z = 0; z < _terrainSizeData.z; z += m_treeSpacing) 
+			{
+                Debug.Log(a++);
+				
+				float unitx = 1.0f / (_terrainSizeData.x - 1);
+                float unitz = 1.0f / (_terrainSizeData.z - 1);
+
+                float offsetX = UnityEngine.Random.value * unitx * m_treeSpacing;
+				float offsetZ = UnityEngine.Random.value * unitz * m_treeSpacing;
+				
+				float normX = x * unitx + offsetX;
+				float normZ = z * unitz + offsetZ;
+				
+				// Get the steepness value at the normalized coordinate.
+				float angle = terrain.terrainData.GetSteepness(normX, normZ);
+				
+				// Steepness is given as an angle, 0..90 degrees. Divide
+				// by 90 to get an alpha blending value in the range 0..1.
+				float frac = angle / 90.0f;
+				
+				if(frac < 0.5f) //make sure tree are not on steep slopes
+				{
+					float worldPosX = x+tileX*(_terrainSizeData.x - 1);
+					float worldPosZ = z+tileZ*(_terrainSizeData.z - 1);
+					
+					///float noise = m_treeNoise.FractalNoise2D(worldPosX, worldPosZ, 3, m_treeFrq, 1.0f);
+					float ht = terrain.terrainData.GetInterpolatedHeight(normX, normZ);
+					
+					//TODO: add terrain area check here to prevent trees at hight slope areas
+					if( ht < terrain.terrainData.size.y * 0.4f)
+					{
+						
+						TreeInstance temp = new TreeInstance();
+						temp.position = new Vector3(normX,ht,normZ);
+                        temp.prototypeIndex = (int) UnityEngine.Random.Range(0, 2);
+                        Debug.Log(temp.prototypeIndex);
+						temp.widthScale = 1;
+						temp.heightScale = 1;
+						temp.color = Color.white;
+						temp.lightmapColor = Color.white;
+						
+						terrain.AddTreeInstance(temp);
+					}
+				}
+				
+			}
+		}
+		
+		terrain.treeDistance = m_treeDistance;
+		terrain.treeBillboardDistance = m_treeBillboardDistance;
+		terrain.treeCrossFadeLength = m_treeCrossFadeLength;
+		terrain.treeMaximumFullLODCount = m_treeMaximumFullLODCount;
+
+
+
+    }
+
+
+    private void SetPlayerPozition()
+    {
+        RaycastHit hit;
+        Ray ray = new Ray(new Vector3(_terrainSizeData.x/2,_terrainSizeData.y , _terrainSizeData.z/2) + Vector3.up * 100, Vector3.down);
+
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity))
+        {
+            if (hit.collider != null)
+            {
+                player.transform.position = new Vector3(_terrainSizeData.x/2, hit.point.y+2, _terrainSizeData.z/2);
+            }
+        }
+    }
 
 
     #region splited terrain generation
@@ -103,8 +205,9 @@ public class TerrainGeneratorRT : MonoBehaviour
         _terrainData = new TerrainData
         {
             heightmapResolution = _hightMapRezaliton,
-            size = _terrainSizeData
-        };
+            size = _terrainSizeData,
+           treePrototypes = _treeData
+    };
 
         LoadTerrain(_filePath, _terrainData);
         _terrainOrigin = Terrain.CreateTerrainGameObject(_terrainData);
