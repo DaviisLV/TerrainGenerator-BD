@@ -40,14 +40,14 @@ public class TerrainGeneratorRT : MonoBehaviour
     public int _textureCount = 0;
     [HideInInspector]
     public string _folderName;
-
-    private GameObject _terrainOrigin;
-    private TerrainData _terrainData;
-    private int _hightMapRezaliton = 0;
     [HideInInspector]
     public SplatPrototype[] terrainTexture = new SplatPrototype[1];
     [HideInInspector]
     public Texture2D TerTexture;
+
+    private GameObject _terrainOrigin;
+    private TerrainData _terrainData;
+    private int _hightMapRezaliton = 0;
 
     public void Start()
     {
@@ -252,7 +252,6 @@ public class TerrainGeneratorRT : MonoBehaviour
                 float xMax = _originalTerrain.terrainData.size.x / _splitCount * (x + 1);
                 float zMin = _originalTerrain.terrainData.size.z / _splitCount * z;
                 float zMax = _originalTerrain.terrainData.size.z / _splitCount * (z + 1);
-                //varetu salabot ta ka nav vajadzigs min max 
                 copyTerrain(_originalTerrain, string.Format("{0}{1}_{2}", _originalTerrain.name, x, z), xMin, xMax, zMin, zMax, _hightMapRezaliton, _terrainData.detailResolution, _terrainData.alphamapResolution);
             }
         }
@@ -277,48 +276,12 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     void copyTerrain(Terrain origTerrain, string newName, float xMin, float xMax, float zMin, float zMax, int heightmapResolution, int detailResolution, int alphamapResolution)
     {
-        if (heightmapResolution < 33 || heightmapResolution > 4097)
-        {
-            Debug.Log("Invalid heightmapResolution " + heightmapResolution);
-            return;
-        }
-        if (detailResolution < 0 || detailResolution > 4048)
-        {
-            Debug.Log("Invalid detailResolution " + detailResolution);
-            return;
-        }
-        if (alphamapResolution < 16 || alphamapResolution > 2048)
-        {
-            Debug.Log("Invalid alphamapResolution " + alphamapResolution);
-            return;
-        }
 
-        if (xMin < 0 || xMin > xMax || xMax > origTerrain.terrainData.size.x)
-        {
-            Debug.Log("Invalid xMin or xMax");
-            return;
-        }
-        if (zMin < 0 || zMin > zMax || zMax > origTerrain.terrainData.size.z)
-        {
-            Debug.Log("Invalid zMin or zMax");
-            return;
-        }
-
-        if (AssetDatabase.FindAssets(newName).Length != 0)
-        {
-            Debug.Log("Asset with name " + newName + " already exists");
-            return;
-        }
-
+        if (xMin < 0 || xMin > xMax || xMax > origTerrain.terrainData.size.x || zMin < 0 || zMin > zMax || zMax > origTerrain.terrainData.size.z) return;
 
         TerrainData td = new TerrainData();
         GameObject TerGameObeject = Terrain.CreateTerrainGameObject(td);
         Terrain newTerrain = TerGameObeject.GetComponent<Terrain>();
-
-        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
-            AssetDatabase.CreateFolder("Assets", "Resources");
-        // Must do this before Splat
-        //AssetDatabase.CreateAsset(td, "Assets/Resources/" + newName + ".asset");
 
         // Copy over all vars
         newTerrain.bakeLightProbesForTrees = origTerrain.bakeLightProbesForTrees;
@@ -350,11 +313,7 @@ public class TerrainGeneratorRT : MonoBehaviour
         td.treePrototypes = origTerrain.terrainData.treePrototypes;
         td.detailPrototypes = origTerrain.terrainData.detailPrototypes;
 
-        // Get percent of original
-        float xMinNorm = xMin / origTerrain.terrainData.size.x;
-        float xMaxNorm = xMax / origTerrain.terrainData.size.x;
-        float zMinNorm = zMin / origTerrain.terrainData.size.z;
-        float zMaxNorm = zMax / origTerrain.terrainData.size.z;
+
         float dimRatio1, dimRatio2;
 
         // Height
@@ -366,80 +325,23 @@ public class TerrainGeneratorRT : MonoBehaviour
         {
             for (int j = 0; j < heightmapResolution; j++)
             {
-                // Divide by size.y because height is stored as percentage
-                // Note this is [j, i] and not [i, j] (Why?!)
                 newHeights[j, i] = origTerrain.SampleHeight(new Vector3(xMin + (i * dimRatio1), 0, zMin + (j * dimRatio2))) / origTerrain.terrainData.size.y;
             }
         }
         td.SetHeightsDelayLOD(0, 0, newHeights);
 
-        // Detail
-        td.SetDetailResolution(detailResolution, 8); // Default? Haven't messed with resolutionPerPatch
-        for (int layer = 0; layer < origTerrain.terrainData.detailPrototypes.Length; layer++)
-        {
-            int[,] detailLayer = origTerrain.terrainData.GetDetailLayer(
-                    Mathf.FloorToInt(xMinNorm * origTerrain.terrainData.detailWidth),
-                    Mathf.FloorToInt(zMinNorm * origTerrain.terrainData.detailHeight),
-                    Mathf.FloorToInt((xMaxNorm - xMinNorm) * origTerrain.terrainData.detailWidth),
-                    Mathf.FloorToInt((zMaxNorm - zMinNorm) * origTerrain.terrainData.detailHeight),
-                    layer);
-            int[,] newDetailLayer = new int[detailResolution, detailResolution];
-            dimRatio1 = (float)detailLayer.GetLength(0) / detailResolution;
-            dimRatio2 = (float)detailLayer.GetLength(1) / detailResolution;
-            for (int i = 0; i < newDetailLayer.GetLength(0); i++)
-            {
-                for (int j = 0; j < newDetailLayer.GetLength(1); j++)
-                {
-                    newDetailLayer[i, j] = detailLayer[Mathf.FloorToInt(i * dimRatio1), Mathf.FloorToInt(j * dimRatio2)];
-                }
-            }
-            td.SetDetailLayer(0, 0, layer, newDetailLayer);
-        }
+        td.SetDetailResolution(detailResolution, 8);
 
-        // Splat
         td.alphamapResolution = alphamapResolution;
-        float[,,] alphamaps = origTerrain.terrainData.GetAlphamaps(
-            Mathf.FloorToInt(xMinNorm * origTerrain.terrainData.alphamapWidth),
-            Mathf.FloorToInt(zMinNorm * origTerrain.terrainData.alphamapHeight),
-            Mathf.FloorToInt((xMaxNorm - xMinNorm) * origTerrain.terrainData.alphamapWidth),
-            Mathf.FloorToInt((zMaxNorm - zMinNorm) * origTerrain.terrainData.alphamapHeight));
-        // Last dim is always origTerrain.terrainData.splatPrototypes.Length so don't ratio
-        float[,,] newAlphamaps = new float[alphamapResolution, alphamapResolution, alphamaps.GetLength(2)];
-        dimRatio1 = (float)alphamaps.GetLength(0) / alphamapResolution;
-        dimRatio2 = (float)alphamaps.GetLength(1) / alphamapResolution;
-        for (int i = 0; i < newAlphamaps.GetLength(0); i++)
-        {
-            for (int j = 0; j < newAlphamaps.GetLength(1); j++)
-            {
-                for (int k = 0; k < newAlphamaps.GetLength(2); k++)
-                {
-                    newAlphamaps[i, j, k] = alphamaps[Mathf.FloorToInt(i * dimRatio1), Mathf.FloorToInt(j * dimRatio2), k];
-                }
-            }
-        }
-        td.SetAlphamaps(0, 0, newAlphamaps);
-
-        //// Tree
-        //for (int i = 0; i < origTerrain.terrainData.treeInstanceCount; i++)
-        //{
-        //    TreeInstance ti = origTerrain.terrainData.treeInstances[i];
-        //    if (ti.position.x < xMinNorm || ti.position.x >= xMaxNorm)
-        //        continue;
-        //    if (ti.position.z < zMinNorm || ti.position.z >= zMaxNorm)
-        //        continue;
-        //    ti.position = new Vector3(((ti.position.x * origTerrain.terrainData.size.x) - xMin) / (xMax - xMin), ti.position.y, ((ti.position.z * origTerrain.terrainData.size.z) - zMin) / (zMax - zMin));
-        //    newTerrain.AddTreeInstance(ti);
-        //}
 
         TerGameObeject.transform.position = new Vector3(origTerrain.transform.position.x + xMin, origTerrain.transform.position.y, origTerrain.transform.position.z + zMin);
         TerGameObeject.name = newName;
-        //
+
         TerGameObeject.transform.parent = transform;
-        // Must happen after setting heightmapResolution
+
         td.size = new Vector3(xMax - xMin, origTerrain.terrainData.size.y, zMax - zMin);
 
         _terrainList.Add(TerGameObeject);
-        // AssetDatabase.SaveAssets();
     }
 
     void stitchTerrain(GameObject center, GameObject left, GameObject top)

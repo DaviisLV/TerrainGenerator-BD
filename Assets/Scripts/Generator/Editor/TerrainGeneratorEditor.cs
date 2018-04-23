@@ -8,72 +8,81 @@ using System;
 [CustomEditor(typeof(TerrainGenerator))]
 public class TerrainGeneratorEditor : Editor
 {
-
     private TerrainGenerator _terGen;
-
-
-    GameObject _terrain;
-
-    Transform transform;
-    int xSplitCount = 3; // Match with TerrainManager if using
-    int zSplitCount = 3;
-    // Must be power of two plus 1
-    int newHeightRes = 33; // Started with 513 in New Terrain
-    int newDetailRes = 0; // Started with 1024 in New Terrain
-    int newSplatRes = 512; // Started with 512 in New Terrain
-    private bool _splitTerrain;
-
-
-
+    private string[] _splitChoices = new[] { "4", "9", "16", "25", "36", "49", "64", "81", "100", "121", "144", "169", "196", "225" };
+    private string[] _resalution = new[] { "33×33", "65×65", "129×129", "257×257", "513×513", "1025×1025", "2049×2049", "4097×4097" };
+    private float _step;
+    private GameObject _terrainOrigin;
+    private TerrainData _terrainData;
+    private int _hightMapRezaliton = 0;
+    SplatPrototype[] terrainTexture = new SplatPrototype[1];
+    private int _splitCount;
 
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
 
-        if (_terGen.FilePath == null) {
+        if (_terGen._filePath == null)
             EditorGUILayout.HelpBox("Select file!", MessageType.Warning);
-            _terGen._fileSelected = false;
-        }
         else
-            EditorGUILayout.HelpBox("Selected file path: " + _terGen.FilePath, MessageType.Info);
+            EditorGUILayout.HelpBox("Selected file path: " + _terGen._filePath, MessageType.Info);
+
 
         if (GUILayout.Button("Select terrain file"))
-        {
-            _terGen.FilePath = EditorUtility.OpenFilePanel("Select terrain file", "", "raw");
-            _terGen._fileSelected = true;
-        }
+            _terGen._filePath = EditorUtility.OpenFilePanel("Select terrain file", "", "raw");
+
+
+        if (_terGen._resalutionSelekted < 0)
+            EditorGUILayout.HelpBox("Select resalution!", MessageType.Warning);
+
+        EditorGUILayout.HelpBox("Terrain resalution can be only the same as terrain file or smaller", MessageType.None);
+        _terGen._resalutionSelekted = EditorGUILayout.Popup("Terain resulation: ", _terGen._resalutionSelekted, _resalution);
 
         EditorGUILayout.HelpBox("Terrain data: X = Width, Y = Height, Z = Length", MessageType.None);
 
-        if (_terGen.TerrainSizeData.x <= 0 || _terGen.TerrainSizeData.y <= 0 || _terGen.TerrainSizeData.z <= 0  )
+
+        if (_terGen._terrainSizeData.x <= 0 || _terGen._terrainSizeData.y <= 0 || _terGen._terrainSizeData.z <= 0)
+            EditorGUILayout.HelpBox("Add terrain size!", MessageType.Error);
+
+
+        _terGen._terrainSizeData = EditorGUILayout.Vector3IntField("Terrain size:", _terGen._terrainSizeData);
+
+
+        _terGen._splitTerrain = EditorGUILayout.Toggle("Split terrain", _terGen._splitTerrain);
+
+        if (_terGen._splitTerrain)
         {
-            _terGen._terrainSizeSelected = false;
-            EditorGUILayout.HelpBox("bļe! ievadi normalu s datus ēzeli", MessageType.Error);
+            _terGen._splitCountID = EditorGUILayout.Popup("Number of pieces", _terGen._splitCountID, _splitChoices);
+
+            if (_terGen._terrainSizeData.x <= _terGen._terrainSizeData.z)
+                _step = _terGen._terrainSizeData.z / (_terGen._splitCountID + 2);
+            else
+                _step = _terGen._terrainSizeData.x / (_terGen._splitCountID + 2);
+
         }
-        else
-            _terGen._terrainSizeSelected = true;
 
-        _terGen.TerrainSizeData = EditorGUILayout.Vector3IntField("Terrain size:", _terGen.TerrainSizeData);
+        _terGen._addTexture = EditorGUILayout.Toggle("Add Texture", _terGen._addTexture);
+
+        if (_terGen._addTexture)
+
+            _terGen.TerTexture = (Texture2D)EditorGUILayout.ObjectField("Texture", _terGen.TerTexture, typeof(Texture2D), false);
 
 
-        _splitTerrain = EditorGUILayout.Toggle("Split terrain", _splitTerrain);
-
-        if (_splitTerrain)
+        if (GUILayout.Button("Remove Terrain"))
         {
-            xSplitCount = EditorGUILayout.IntField("X = ", xSplitCount);
-            zSplitCount = EditorGUILayout.IntField("Z = ", zSplitCount);
+            RemoveTerrain();
         }
 
-        if (_terGen._fileSelected && _terGen._terrainSizeSelected)
+
         if (GUILayout.Button("Create Terrain"))
         {
-            RemovePreviousTerrain();
+            RemoveTerrain();
             CreateTerrain();
- 
-        }
-        if (GUILayout.Button("split bļe"))
-        {
-            SplitAnd();
+            if (_terGen._addTexture)
+                Addtexturess(_terrainData);
+            if (_terGen._splitTerrain)
+                SplitTerrain();
+
         }
 
         EditorUtility.SetDirty(_terGen);
@@ -81,36 +90,40 @@ public class TerrainGeneratorEditor : Editor
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
     }
 
+
     private void OnEnable()
     {
         _terGen = (TerrainGenerator)target;
 
     }
 
-    private void CreateTerrain()
+    #region Remove terrain
+
+    private void RemoveTerrain()
     {
-
-        TerrainData _terrainData = new TerrainData
+        for (int i = _terGen.transform.childCount - 1; i >= 0; i--)
         {
-            size = _terGen.TerrainSizeData
-        };
-       
-
-        LoadTerrain(_terGen.FilePath, _terrainData);
-        _terrain = Terrain.CreateTerrainGameObject(_terrainData);
-        _terrain.transform.parent = _terGen.transform;
-
-        
-
+            DestroyImmediate(_terGen.transform.GetChild(i).gameObject);
+        }
     }
 
+    #endregion
 
-    private void RemovePreviousTerrain()
+    #region Create terran from file
+
+    public void CreateTerrain()
     {
-        foreach (Transform child in _terGen.transform)
+        _hightMapRezaliton = GetTerrainRezalution(_terGen._splitCountID);
+        _terrainData = new TerrainData
         {
-            GameObject.DestroyImmediate(child.gameObject);
-        }
+            heightmapResolution = _hightMapRezaliton,
+            size = _terGen._terrainSizeData
+        };
+
+        LoadTerrain(_terGen._filePath, _terrainData);
+        _terrainOrigin = Terrain.CreateTerrainGameObject(_terrainData);
+        _terrainOrigin.transform.parent = _terGen.transform;
+
     }
 
     void LoadTerrain(string aFileName, TerrainData aTerrain)
@@ -133,34 +146,74 @@ public class TerrainGeneratorEditor : Editor
         aTerrain.SetHeights(0, 0, data);
     }
 
-    public void SplitAnd()
+    private int GetTerrainRezalution(int arrayIndex)
     {
-        Terrain _originalTerrain = _terrain.GetComponent<Terrain>();
+        switch (arrayIndex)
+        {
+            case 0:
+                return 33;
+            case 1:
+                return 65;
+            case 2:
+                return 129;
+            case 3:
+                return 257;
+            case 4:
+                return 513;
+            case 5:
+                return 1025;
+            case 6:
+                return 2049;
+            case 7:
+                return 4097;
+            default:
+                return 0;
+        }
+    }
+
+    #endregion
+
+    #region Add texture
+
+    public void Addtexturess(TerrainData terrainData)
+    {
+        if (!_terGen._addTexture) return;
+        terrainTexture[0] = new SplatPrototype();
+        terrainTexture[0].texture = _terGen.TerTexture;
+        terrainData.splatPrototypes = terrainTexture;
+
+    }
+
+    #endregion
+
+    #region Split terrain
+    public void SplitTerrain()
+    {
+
+        _splitCount = _terGen._splitCountID + 2;
+
+        Terrain _originalTerrain = _terrainOrigin.GetComponent<Terrain>();
         if (_originalTerrain == null) return;
 
-        if (xSplitCount < 1)
-            xSplitCount = 1;
-        if (zSplitCount < 1)
-            zSplitCount = 1;
+        _step = _originalTerrain.terrainData.size.x / _splitCount;
 
-        for (int x = 0; x < xSplitCount; x++)
+        for (int x = 0; x < _splitCount; x++)
         {
-            if (x > 1) break;
-            for (int z = 0; z < zSplitCount; z++)
+
+            for (int z = 0; z < _splitCount; z++)
             {
-                // EditorUtility.DisplayProgressBar("Splitting Terrain", "Copying heightmap, detail, splat, and trees", (float)((x * zSplitCount) + z) / (xSplitCount * zSplitCount));
-                float xMin = _originalTerrain.terrainData.size.x / xSplitCount * x;
-                float xMax = _originalTerrain.terrainData.size.x / xSplitCount * (x + 1);
-                float zMin = _originalTerrain.terrainData.size.z / zSplitCount * z;
-                float zMax = _originalTerrain.terrainData.size.z / zSplitCount * (z + 1);
-                copyTerrain(_originalTerrain, string.Format("{0}{1}_{2}", _originalTerrain.name, x, z), xMin, xMax, zMin, zMax, newHeightRes, newDetailRes, newSplatRes);
+                float xMin = _originalTerrain.terrainData.size.x / _splitCount * x;
+                float xMax = _originalTerrain.terrainData.size.x / _splitCount * (x + 1);
+                float zMin = _originalTerrain.terrainData.size.z / _splitCount * z;
+                float zMax = _originalTerrain.terrainData.size.z / _splitCount * (z + 1);
+
+                copyTerrain(_originalTerrain, string.Format("{0}{1}_{2}", _originalTerrain.name, x, z), xMin, xMax, zMin, zMax, _hightMapRezaliton, _terrainData.detailResolution, _terrainData.alphamapResolution);
             }
         }
-        // EditorUtility.ClearProgressBar();
 
-        for (int x = 0; x < xSplitCount; x++)          
-        {  
-            for (int z = 0; z < zSplitCount; z++)
+        for (int x = 0; x < _splitCount; x++)
+        {
+            for (int z = 0; z < _splitCount; z++)
             {
 
                 GameObject center = GameObject.Find(string.Format("{0}{1}_{2}", _originalTerrain.name, x, z));
@@ -169,59 +222,22 @@ public class TerrainGeneratorEditor : Editor
                 GameObject top = GameObject.Find(string.Format("{0}{1}_{2}", _originalTerrain.name, x, z + 1));
                 stitchTerrain(center, left, top);
             }
-          
+
         }
 
-
+        DestroyImmediate(_terrainOrigin);
     }
 
 
     void copyTerrain(Terrain origTerrain, string newName, float xMin, float xMax, float zMin, float zMax, int heightmapResolution, int detailResolution, int alphamapResolution)
     {
-        if (heightmapResolution < 33 || heightmapResolution > 4097)
-        {
-            Debug.Log("Invalid heightmapResolution " + heightmapResolution);
-            return;
-        }
-        if (detailResolution < 0 || detailResolution > 4048)
-        {
-            Debug.Log("Invalid detailResolution " + detailResolution);
-            return;
-        }
-        if (alphamapResolution < 16 || alphamapResolution > 2048)
-        {
-            Debug.Log("Invalid alphamapResolution " + alphamapResolution);
-            return;
-        }
 
-        if (xMin < 0 || xMin > xMax || xMax > origTerrain.terrainData.size.x)
-        {
-            Debug.Log("Invalid xMin or xMax");
-            return;
-        }
-        if (zMin < 0 || zMin > zMax || zMax > origTerrain.terrainData.size.z)
-        {
-            Debug.Log("Invalid zMin or zMax");
-            return;
-        }
-
-        if (AssetDatabase.FindAssets(newName).Length != 0)
-        {
-            Debug.Log("Asset with name " + newName + " already exists");
-            return;
-        }
-     
+        if (xMin < 0 || xMin > xMax || xMax > origTerrain.terrainData.size.x || zMin < 0 || zMin > zMax || zMax > origTerrain.terrainData.size.z) return;
 
         TerrainData td = new TerrainData();
-        GameObject gameObject = Terrain.CreateTerrainGameObject(td);
-        Terrain newTerrain = gameObject.GetComponent<Terrain>();
+        GameObject TerGameObeject = Terrain.CreateTerrainGameObject(td);
+        Terrain newTerrain = TerGameObeject.GetComponent<Terrain>();
 
-        if (!AssetDatabase.IsValidFolder("Assets/Resources"))
-            AssetDatabase.CreateFolder("Assets", "Resources");
-        // Must do this before Splat
-        //AssetDatabase.CreateAsset(td, "Assets/Resources/" + newName + ".asset");
-
-        // Copy over all vars
         newTerrain.bakeLightProbesForTrees = origTerrain.bakeLightProbesForTrees;
         newTerrain.basemapDistance = origTerrain.basemapDistance;
         newTerrain.castShadows = origTerrain.castShadows;
@@ -251,14 +267,7 @@ public class TerrainGeneratorEditor : Editor
         td.treePrototypes = origTerrain.terrainData.treePrototypes;
         td.detailPrototypes = origTerrain.terrainData.detailPrototypes;
 
-        // Get percent of original
-        float xMinNorm = xMin / origTerrain.terrainData.size.x;
-        float xMaxNorm = xMax / origTerrain.terrainData.size.x;
-        float zMinNorm = zMin / origTerrain.terrainData.size.z;
-        float zMaxNorm = zMax / origTerrain.terrainData.size.z;
         float dimRatio1, dimRatio2;
-
-        // Height
         td.heightmapResolution = heightmapResolution;
         float[,] newHeights = new float[heightmapResolution, heightmapResolution];
         dimRatio1 = (xMax - xMin) / heightmapResolution;
@@ -267,79 +276,20 @@ public class TerrainGeneratorEditor : Editor
         {
             for (int j = 0; j < heightmapResolution; j++)
             {
-                // Divide by size.y because height is stored as percentage
-                // Note this is [j, i] and not [i, j] (Why?!)
                 newHeights[j, i] = origTerrain.SampleHeight(new Vector3(xMin + (i * dimRatio1), 0, zMin + (j * dimRatio2))) / origTerrain.terrainData.size.y;
             }
         }
         td.SetHeightsDelayLOD(0, 0, newHeights);
 
-        // Detail
-        td.SetDetailResolution(detailResolution, 8); // Default? Haven't messed with resolutionPerPatch
-        for (int layer = 0; layer < origTerrain.terrainData.detailPrototypes.Length; layer++)
-        {
-            int[,] detailLayer = origTerrain.terrainData.GetDetailLayer(
-                    Mathf.FloorToInt(xMinNorm * origTerrain.terrainData.detailWidth),
-                    Mathf.FloorToInt(zMinNorm * origTerrain.terrainData.detailHeight),
-                    Mathf.FloorToInt((xMaxNorm - xMinNorm) * origTerrain.terrainData.detailWidth),
-                    Mathf.FloorToInt((zMaxNorm - zMinNorm) * origTerrain.terrainData.detailHeight),
-                    layer);
-            int[,] newDetailLayer = new int[detailResolution, detailResolution];
-            dimRatio1 = (float)detailLayer.GetLength(0) / detailResolution;
-            dimRatio2 = (float)detailLayer.GetLength(1) / detailResolution;
-            for (int i = 0; i < newDetailLayer.GetLength(0); i++)
-            {
-                for (int j = 0; j < newDetailLayer.GetLength(1); j++)
-                {
-                    newDetailLayer[i, j] = detailLayer[Mathf.FloorToInt(i * dimRatio1), Mathf.FloorToInt(j * dimRatio2)];
-                }
-            }
-            td.SetDetailLayer(0, 0, layer, newDetailLayer);
-        }
+        td.SetDetailResolution(detailResolution, 8);
 
-        // Splat
         td.alphamapResolution = alphamapResolution;
-        float[,,] alphamaps = origTerrain.terrainData.GetAlphamaps(
-            Mathf.FloorToInt(xMinNorm * origTerrain.terrainData.alphamapWidth),
-            Mathf.FloorToInt(zMinNorm * origTerrain.terrainData.alphamapHeight),
-            Mathf.FloorToInt((xMaxNorm - xMinNorm) * origTerrain.terrainData.alphamapWidth),
-            Mathf.FloorToInt((zMaxNorm - zMinNorm) * origTerrain.terrainData.alphamapHeight));
-        // Last dim is always origTerrain.terrainData.splatPrototypes.Length so don't ratio
-        float[,,] newAlphamaps = new float[alphamapResolution, alphamapResolution, alphamaps.GetLength(2)];
-        dimRatio1 = (float)alphamaps.GetLength(0) / alphamapResolution;
-        dimRatio2 = (float)alphamaps.GetLength(1) / alphamapResolution;
-        for (int i = 0; i < newAlphamaps.GetLength(0); i++)
-        {
-            for (int j = 0; j < newAlphamaps.GetLength(1); j++)
-            {
-                for (int k = 0; k < newAlphamaps.GetLength(2); k++)
-                {
-                    newAlphamaps[i, j, k] = alphamaps[Mathf.FloorToInt(i * dimRatio1), Mathf.FloorToInt(j * dimRatio2), k];
-                }
-            }
-        }
-        td.SetAlphamaps(0, 0, newAlphamaps);
 
-        //// Tree
-        //for (int i = 0; i < origTerrain.terrainData.treeInstanceCount; i++)
-        //{
-        //    TreeInstance ti = origTerrain.terrainData.treeInstances[i];
-        //    if (ti.position.x < xMinNorm || ti.position.x >= xMaxNorm)
-        //        continue;
-        //    if (ti.position.z < zMinNorm || ti.position.z >= zMaxNorm)
-        //        continue;
-        //    ti.position = new Vector3(((ti.position.x * origTerrain.terrainData.size.x) - xMin) / (xMax - xMin), ti.position.y, ((ti.position.z * origTerrain.terrainData.size.z) - zMin) / (zMax - zMin));
-        //    newTerrain.AddTreeInstance(ti);
-        //}
-
-        gameObject.transform.position = new Vector3(origTerrain.transform.position.x + xMin, origTerrain.transform.position.y, origTerrain.transform.position.z + zMin);
-        gameObject.name = newName;
-        //
-        gameObject.transform.parent = _terGen.transform;
-        // Must happen after setting heightmapResolution
+        TerGameObeject.transform.position = new Vector3(origTerrain.transform.position.x + xMin, origTerrain.transform.position.y, origTerrain.transform.position.z + zMin);
+        TerGameObeject.name = newName;
+        TerGameObeject.transform.parent = _terGen.transform;
         td.size = new Vector3(xMax - xMin, origTerrain.terrainData.size.y, zMax - zMin);
 
-       // AssetDatabase.SaveAssets();
     }
 
     void stitchTerrain(GameObject center, GameObject left, GameObject top)
@@ -378,6 +328,7 @@ public class TerrainGeneratorEditor : Editor
         }
         centerTerrain.terrainData.SetHeights(0, 0, centerHeights);
     }
+    #endregion
 }
 
 
