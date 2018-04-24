@@ -43,6 +43,8 @@ public class TerrainGeneratorRT : MonoBehaviour
     [HideInInspector]
     public int _treesPrefabCount;
     [HideInInspector]
+    public int _treesMaxReliefSlope = 45;
+    [HideInInspector]
     public string _folderName;
     [HideInInspector]
     public SplatPrototype[] terrainTexture = new SplatPrototype[1];
@@ -90,7 +92,7 @@ public class TerrainGeneratorRT : MonoBehaviour
         SplitTerrain();
         enableAll();
         SetPlayerPozition();
-       
+
 
     }
 
@@ -110,74 +112,66 @@ public class TerrainGeneratorRT : MonoBehaviour
                 _treeData[i].prefab = Trees[i];
             }
         }
+
         _detailData = new DetailPrototype[Details.Length];
-       
-            _detailData[0] = new DetailPrototype();
-            _detailData[0].prototypeTexture = Details[0];
-            _detailData[0].renderMode = detailMode;
-            _detailData[0].healthyColor = m_grassHealthyColor;
-            _detailData[0].dryColor = m_grassDryColor;
-        
+
+        _detailData[0] = new DetailPrototype();
+        _detailData[0].prototypeTexture = Details[0];
+        _detailData[0].renderMode = detailMode;
+        _detailData[0].healthyColor = m_grassHealthyColor;
+        _detailData[0].dryColor = m_grassDryColor;
+
     }
 
     void FillTreeInstances(Terrain terrain)
 
-	{
+    {
         if (!_addTrees) return;
-        
-            for (int x = 0; x < _terrainSizeData.z; x += _treeSpacing) 
-		{
-			for (int z = 0; z < _terrainSizeData.z; z += _treeSpacing) 
-			{
-				
-				float unitx = 1.0f / (_terrainSizeData.x - 1);
+
+        for (int x = 0; x < _terrainSizeData.z; x += _treeSpacing)
+        {
+            for (int z = 0; z < _terrainSizeData.z; z += _treeSpacing)
+            {
+
+                float unitx = 1.0f / (_terrainSizeData.x - 1);
                 float unitz = 1.0f / (_terrainSizeData.z - 1);
 
                 float offsetX = UnityEngine.Random.value * unitx * _treeSpacing;
-				float offsetZ = UnityEngine.Random.value * unitz * _treeSpacing;
-				
-				float normX = x * unitx + offsetX;
-				float normZ = z * unitz + offsetZ;
-				
-				// Get the steepness value at the normalized coordinate.
-				float angle = terrain.terrainData.GetSteepness(normX, normZ);
-				
-				// Steepness is given as an angle, 0..90 degrees. Divide
-				// by 90 to get an alpha blending value in the range 0..1.
-				float frac = angle / 90.0f;
-				
-				if(frac < 0.5f) //make sure tree are not on steep slopes
-				{
-					
-					float ht = terrain.terrainData.GetInterpolatedHeight(normX, normZ);
+                float offsetZ = UnityEngine.Random.value * unitz * _treeSpacing;
 
-					if( ht < terrain.terrainData.size.y * 0.4f)
-					{
-						
-						TreeInstance temp = new TreeInstance();
-						temp.position = new Vector3(normX,ht,normZ);
-                        temp.prototypeIndex = (int) UnityEngine.Random.Range(0, Trees.Length);
-						temp.widthScale = 1;
-						temp.heightScale = 1;
-						temp.color = Color.white;
-						temp.lightmapColor = Color.white;
-						
-						terrain.AddTreeInstance(temp);
-                        
-					}
-				}
-				
-			}
-		}
+                float normX = x * unitx + offsetX;
+                float normZ = z * unitz + offsetZ;
+
+                float angle = terrain.terrainData.GetSteepness(normX, normZ);
+
+                if (angle < _treesMaxReliefSlope)
+                {
+
+                    float ht = terrain.terrainData.GetInterpolatedHeight(normX, normZ);
+
+                    if (ht < terrain.terrainData.size.y * 0.4f)
+                    {
+
+                        TreeInstance temp = new TreeInstance();
+                        temp.position = new Vector3(normX, ht, normZ);
+                        temp.prototypeIndex = (int)UnityEngine.Random.Range(0, Trees.Length);
+                        temp.widthScale = 1;
+                        temp.heightScale = 1;
+                        temp.color = Color.white;
+                        temp.lightmapColor = Color.white;
+
+                        terrain.AddTreeInstance(temp);
+
+                    }
+                }
+
+            }
+        }
 
         //terrain.treeDistance = m_treeDistance;
         //terrain.treeBillboardDistance = m_treeBillboardDistance;
         //terrain.treeCrossFadeLength = m_treeCrossFadeLength;
         //terrain.treeMaximumFullLODCount = m_treeMaximumFullLODCount;
-
-
-
-
     }
 
     void FillDetailMap(Terrain terrain)
@@ -194,7 +188,7 @@ public class TerrainGeneratorRT : MonoBehaviour
                 float unitz = 1.0f / (_terrainSizeData.z - 1);
 
                 float offsetX = UnityEngine.Random.value * unitx;
-                float offsetZ = UnityEngine.Random.value * unitz ;
+                float offsetZ = UnityEngine.Random.value * unitz;
 
                 float normX = x * unitx + offsetX;
                 float normZ = z * unitz + offsetZ;
@@ -210,11 +204,11 @@ public class TerrainGeneratorRT : MonoBehaviour
                 {
 
                     //TODO: add terrain area check here to prevent details at hight slope areas
-                  
-                       
-                            detailMap0[z, x] = 1;
-                      
-                    
+
+
+                    detailMap0[z, x] = 1;
+
+
                 }
 
             }
@@ -229,7 +223,7 @@ public class TerrainGeneratorRT : MonoBehaviour
         terrain.terrainData.SetDetailResolution((int)terrain.terrainData.size.x, m_detailResolutionPerPatch);
 
         terrain.terrainData.SetDetailLayer(0, 0, 0, detailMap0);
-       
+
 
 
     }
@@ -238,13 +232,13 @@ public class TerrainGeneratorRT : MonoBehaviour
     private void SetPlayerPozition()
     {
         RaycastHit hit;
-        Ray ray = new Ray(new Vector3(_terrainSizeData.x/2,_terrainSizeData.y , _terrainSizeData.z/2) + Vector3.up * 100, Vector3.down);
+        Ray ray = new Ray(new Vector3(_terrainSizeData.x / 2, _terrainSizeData.y, _terrainSizeData.z / 2) + Vector3.up * 100, Vector3.down);
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity))
         {
             if (hit.collider != null)
             {
-                player.transform.position = new Vector3(_terrainSizeData.x/2, hit.point.y+2, _terrainSizeData.z/2);
+                player.transform.position = new Vector3(_terrainSizeData.x / 2, hit.point.y + 2, _terrainSizeData.z / 2);
             }
         }
     }
@@ -284,10 +278,10 @@ public class TerrainGeneratorRT : MonoBehaviour
     {
         _terrainData = new TerrainData
         {
-           heightmapResolution = _hightMapRezaliton,
-           size = _terrainSizeData,
-           treePrototypes = _treeData,
-           detailPrototypes = _detailData
+            heightmapResolution = _hightMapRezaliton,
+            size = _terrainSizeData,
+            treePrototypes = _treeData,
+            detailPrototypes = _detailData
         };
 
         LoadTerrain(_filePath, _terrainData);

@@ -83,6 +83,7 @@ public class TerrainGeneratorRTEditor : Editor
         if (_terGen._addTrees)
         {
             _terGen._treeSpacing = EditorGUILayout.IntSlider("Trees spacing", _terGen._treeSpacing, 1, _terGen._terrainSizeData.x / 2);
+            _terGen._treesMaxReliefSlope = EditorGUILayout.IntSlider("Max anngel for tree gen", _terGen._treesMaxReliefSlope, 0, 90);
             _terGen._treesPrefabCount = EditorGUILayout.IntSlider("Trees prefab count", _terGen._treesPrefabCount, 1, 24);
 
             if (_terGen._treesPrefabCount != _terGen.Trees.Length)
