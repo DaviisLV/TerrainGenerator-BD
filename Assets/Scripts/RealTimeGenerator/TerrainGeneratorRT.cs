@@ -19,6 +19,8 @@ public class TerrainGeneratorRT : MonoBehaviour
     [HideInInspector]
     public bool _addTexture = false;
     [HideInInspector]
+    public bool _addTrees = false;
+    [HideInInspector]
     public bool _saveToAssets = false;
     [HideInInspector]
     public bool _saveToAssetsAsOneObj = true;
@@ -39,6 +41,8 @@ public class TerrainGeneratorRT : MonoBehaviour
     [HideInInspector]
     public int _textureCount = 0;
     [HideInInspector]
+    public int _treesPrefabCount;
+    [HideInInspector]
     public string _folderName;
     [HideInInspector]
     public SplatPrototype[] terrainTexture = new SplatPrototype[1];
@@ -49,30 +53,39 @@ public class TerrainGeneratorRT : MonoBehaviour
     private TerrainData _terrainData;
     private int _hightMapRezaliton = 0;
 
-    public int m_treeSpacing = 32; //spacing between trees
-    public float m_treeDistance = 2000.0f; //The distance at which trees will no longer be drawn
-    public float m_treeBillboardDistance = 400.0f; //The distance at which trees meshes will turn into tree billboards
-    public float m_treeCrossFadeLength = 20.0f; //As trees turn to billboards there transform is rotated to match the meshes, a higher number will make this transition smoother
-    public int m_treeMaximumFullLODCount = 400; //The maximum number of trees that will be drawn in a certain area. 
+    [HideInInspector]
+    public int _treeSpacing = 30;
+    [HideInInspector]
+    public GameObject[] Trees;
 
-
-    public GameObject[] trees;
+    public Texture2D[] Details;
     private TreePrototype[] _treeData;
+    private DetailPrototype[] _detailData;
+
+    #region detail_settings
+    public DetailRenderMode detailMode;
+    public int m_detailObjectDistance = 400; //The distance at which details will no longer be drawn
+    public float m_detailObjectDensity = 4.0f; //Creates more dense details within patch// biežums
+    public int m_detailResolutionPerPatch = 32; //The size of detail patch. A higher number may reduce draw calls as details will be batch in larger patches
+    public float m_wavingGrassStrength = 0.4f;
+    public float m_wavingGrassAmount = 0.2f;
+    public float m_wavingGrassSpeed = 0.4f;
+    public Color m_wavingGrassTint = Color.green;
+    public Color m_grassHealthyColor = Color.green;
+    public Color m_grassDryColor = Color.grey;
+
+    #endregion
 
     public void Start()
     {
         _hightMapRezaliton = GetTerrainRezalution(_resalutionSelekted);
         _splitCount = _splitCountID + 2;
 
-        _treeData = new TreePrototype[trees.Length];
-        for (int i = 0; i < trees.Length; i++)
-        {
-            _treeData[i] = new TreePrototype();
-            _treeData[i].prefab = trees[i];
-        }
+        CreateProtoTypes();
 
         CreateTerrain();
-        FillTreeInstances(_terrainOrigin.GetComponent<Terrain>(), 1, 1);
+        FillTreeInstances(_terrainOrigin.GetComponent<Terrain>());
+        FillDetailMap(_terrainOrigin.GetComponent<Terrain>());
         Addtexturess(_terrainData);
         SplitTerrain();
         enableAll();
@@ -86,26 +99,42 @@ public class TerrainGeneratorRT : MonoBehaviour
         playerMove();
     }
 
-    
-	void FillTreeInstances(Terrain terrain, int tileX, int tileZ)
+    void CreateProtoTypes()
+    {
+        if (_addTrees)
+        {
+            _treeData = new TreePrototype[Trees.Length];
+            for (int i = 0; i < Trees.Length; i++)
+            {
+                _treeData[i] = new TreePrototype();
+                _treeData[i].prefab = Trees[i];
+            }
+        }
+        _detailData = new DetailPrototype[Details.Length];
+       
+            _detailData[0] = new DetailPrototype();
+            _detailData[0].prototypeTexture = Details[0];
+            _detailData[0].renderMode = detailMode;
+            _detailData[0].healthyColor = m_grassHealthyColor;
+            _detailData[0].dryColor = m_grassDryColor;
+        
+    }
+
+    void FillTreeInstances(Terrain terrain)
 
 	{
-
-      
-
-        //Random.seed = 0;
-        int a = 0;
-        for (int x = 0; x < _terrainSizeData.z; x += m_treeSpacing) 
+        if (!_addTrees) return;
+        
+            for (int x = 0; x < _terrainSizeData.z; x += _treeSpacing) 
 		{
-			for (int z = 0; z < _terrainSizeData.z; z += m_treeSpacing) 
+			for (int z = 0; z < _terrainSizeData.z; z += _treeSpacing) 
 			{
-                Debug.Log(a++);
 				
 				float unitx = 1.0f / (_terrainSizeData.x - 1);
                 float unitz = 1.0f / (_terrainSizeData.z - 1);
 
-                float offsetX = UnityEngine.Random.value * unitx * m_treeSpacing;
-				float offsetZ = UnityEngine.Random.value * unitz * m_treeSpacing;
+                float offsetX = UnityEngine.Random.value * unitx * _treeSpacing;
+				float offsetZ = UnityEngine.Random.value * unitz * _treeSpacing;
 				
 				float normX = x * unitx + offsetX;
 				float normZ = z * unitz + offsetZ;
@@ -119,37 +148,88 @@ public class TerrainGeneratorRT : MonoBehaviour
 				
 				if(frac < 0.5f) //make sure tree are not on steep slopes
 				{
-					float worldPosX = x+tileX*(_terrainSizeData.x - 1);
-					float worldPosZ = z+tileZ*(_terrainSizeData.z - 1);
 					
-					///float noise = m_treeNoise.FractalNoise2D(worldPosX, worldPosZ, 3, m_treeFrq, 1.0f);
 					float ht = terrain.terrainData.GetInterpolatedHeight(normX, normZ);
-					
-					//TODO: add terrain area check here to prevent trees at hight slope areas
+
 					if( ht < terrain.terrainData.size.y * 0.4f)
 					{
 						
 						TreeInstance temp = new TreeInstance();
 						temp.position = new Vector3(normX,ht,normZ);
-                        temp.prototypeIndex = (int) UnityEngine.Random.Range(0, 2);
-                        Debug.Log(temp.prototypeIndex);
+                        temp.prototypeIndex = (int) UnityEngine.Random.Range(0, Trees.Length);
 						temp.widthScale = 1;
 						temp.heightScale = 1;
 						temp.color = Color.white;
 						temp.lightmapColor = Color.white;
 						
 						terrain.AddTreeInstance(temp);
+                        
 					}
 				}
 				
 			}
 		}
-		
-		terrain.treeDistance = m_treeDistance;
-		terrain.treeBillboardDistance = m_treeBillboardDistance;
-		terrain.treeCrossFadeLength = m_treeCrossFadeLength;
-		terrain.treeMaximumFullLODCount = m_treeMaximumFullLODCount;
 
+        //terrain.treeDistance = m_treeDistance;
+        //terrain.treeBillboardDistance = m_treeBillboardDistance;
+        //terrain.treeCrossFadeLength = m_treeCrossFadeLength;
+        //terrain.treeMaximumFullLODCount = m_treeMaximumFullLODCount;
+
+
+
+
+    }
+
+    void FillDetailMap(Terrain terrain)
+    {//each layer is drawn separately so if you have a lot of layers your draw calls will increase 
+        int[,] detailMap0 = new int[(int)terrain.terrainData.size.x, (int)terrain.terrainData.size.z];
+
+
+
+        for (int x = 0; x < terrain.terrainData.size.x; x++)
+        {
+            for (int z = 0; z < terrain.terrainData.size.z; z++)
+            {
+                float unitx = 1.0f / (_terrainSizeData.x - 1);
+                float unitz = 1.0f / (_terrainSizeData.z - 1);
+
+                float offsetX = UnityEngine.Random.value * unitx;
+                float offsetZ = UnityEngine.Random.value * unitz ;
+
+                float normX = x * unitx + offsetX;
+                float normZ = z * unitz + offsetZ;
+
+                // Get the steepness value at the normalized coordinate.
+                float angle = terrain.terrainData.GetSteepness(normX, normZ);
+
+                // Steepness is given as an angle, 0..90 degrees. Divide
+                // by 90 to get an alpha blending value in the range 0..1.
+                float frac = angle / 90.0f;
+
+                if (frac < 0.5f)
+                {
+
+                    //TODO: add terrain area check here to prevent details at hight slope areas
+                  
+                       
+                            detailMap0[z, x] = 1;
+                      
+                    
+                }
+
+            }
+        }
+
+        terrain.terrainData.wavingGrassStrength = m_wavingGrassStrength;
+        terrain.terrainData.wavingGrassAmount = m_wavingGrassAmount;
+        terrain.terrainData.wavingGrassSpeed = m_wavingGrassSpeed;
+        terrain.terrainData.wavingGrassTint = m_wavingGrassTint;
+        terrain.detailObjectDensity = m_detailObjectDensity;
+        terrain.detailObjectDistance = m_detailObjectDistance;
+        terrain.terrainData.SetDetailResolution((int)terrain.terrainData.size.x, m_detailResolutionPerPatch);
+
+        terrain.terrainData.SetDetailLayer(0, 0, 0, detailMap0);
+       
 
 
     }
@@ -204,10 +284,11 @@ public class TerrainGeneratorRT : MonoBehaviour
     {
         _terrainData = new TerrainData
         {
-            heightmapResolution = _hightMapRezaliton,
-            size = _terrainSizeData,
-           treePrototypes = _treeData
-    };
+           heightmapResolution = _hightMapRezaliton,
+           size = _terrainSizeData,
+           treePrototypes = _treeData,
+           detailPrototypes = _detailData
+        };
 
         LoadTerrain(_filePath, _terrainData);
         _terrainOrigin = Terrain.CreateTerrainGameObject(_terrainData);
