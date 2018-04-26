@@ -8,13 +8,10 @@ using System.Linq;
 [CustomEditor(typeof(TerrainGeneratorRT))]
 public class TerrainGeneratorRTEditor : Editor
 {
-
     private TerrainGeneratorRT _terGen;
     private string[] _choices = new[] { "4", "9", "16", "25", "36", "49", "64", "81", "100", "121", "144", "169", "196", "225" };
     private string[] _resalution = new[] { "33×33", "65×65", "129×129", "257×257", "513×513", "1025×1025", "2049×2049", "4097×4097" };
     private int _step;
-    private bool ttn;
-    private object _textura;
     private GameObject[] _treesArr;
 
     public override void OnInspectorGUI()
@@ -34,11 +31,11 @@ public class TerrainGeneratorRTEditor : Editor
 
         #region Set_Terrain_Properties
 
-        if (_terGen._resalutionSelekted < 0)
+        if (_terGen._resolutionSelected < 0)
             EditorGUILayout.HelpBox("Select resalution!", MessageType.Warning);
 
         EditorGUILayout.HelpBox("Terrain resalution can be only the same as terrain file or smaller", MessageType.None);
-        _terGen._resalutionSelekted = EditorGUILayout.Popup("Terain resulation: ", _terGen._resalutionSelekted, _resalution);
+        _terGen._resolutionSelected = EditorGUILayout.Popup("Terain resulation: ", _terGen._resolutionSelected, _resalution);
 
         EditorGUILayout.HelpBox("Terrain data: X = Width, Y = Height, Z = Length", MessageType.None);
 
@@ -50,7 +47,7 @@ public class TerrainGeneratorRTEditor : Editor
         _terGen._terrainSizeData = EditorGUILayout.Vector3IntField("Terrain size:", _terGen._terrainSizeData);
         #endregion
 
-        #region Split_terrain
+        #region Split_Terrain
 
         _terGen._splitTerrain = EditorGUILayout.Toggle("Split terrain", _terGen._splitTerrain);
 
@@ -111,14 +108,25 @@ public class TerrainGeneratorRTEditor : Editor
         }
         #endregion
 
+        #region Add_Grass
+
+        _terGen._addGrass = EditorGUILayout.Toggle("Add Grass", _terGen._addGrass);
+        if (_terGen._addGrass)
+        {
+         
+            _terGen._grassMaxReliefSlope = EditorGUILayout.IntSlider("Max angel for grass gen", _terGen._grassMaxReliefSlope, 0, 90);
+            _terGen.Grass = (Texture2D)EditorGUILayout.ObjectField("Grass texture", _terGen.Grass, typeof(Texture2D), false);
+
+
+
+        }
+        #endregion
+
     }
-
-
 
     private void OnEnable()
     {
         _terGen = (TerrainGeneratorRT)target;
     }
-
 
 }

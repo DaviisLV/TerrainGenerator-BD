@@ -8,12 +8,24 @@ using System.Linq;
 
 public class TerrainGeneratorRT : MonoBehaviour
 {
+    #region  All_Variable
+
     public GameObject player;
 
+    #region Terain_Properties
     [HideInInspector]
     public Vector3Int _terrainSizeData;
     [HideInInspector]
     public string _filePath;
+    [HideInInspector]
+    public int _resolutionSelected = -1;
+
+    private GameObject _terrainOrigin;
+    private TerrainData _terrainData;
+    private int _hightMapRezaliton = 0;
+    #endregion
+
+    #region All_Booleans
     [HideInInspector]
     public bool _splitTerrain = false;
     [HideInInspector]
@@ -21,70 +33,76 @@ public class TerrainGeneratorRT : MonoBehaviour
     [HideInInspector]
     public bool _addTrees = false;
     [HideInInspector]
-    public bool _saveToAssets = false;
-    [HideInInspector]
-    public bool _saveToAssetsAsOneObj = true;
-    [HideInInspector]
-    public bool _terrainSizeSelected = false;
+    public bool _addGrass = false;
+    #endregion
+
+    #region Terrain_Split
     [HideInInspector]
     public int _splitCount;
     [HideInInspector]
     public int _splitCountID;
     [HideInInspector]
+    #endregion
+
+    #region Runtime_Path_Generation
     public int _radiusOfGeneration = 0;
     [HideInInspector]
     public float _step;
     [HideInInspector]
     public List<GameObject> _terrainList;
-    [HideInInspector]
-    public int _resalutionSelekted = -1;
-    [HideInInspector]
-    public int _textureCount = 0;
+    #endregion
+
+    #region Trees_Properties
     [HideInInspector]
     public int _treesPrefabCount;
     [HideInInspector]
     public int _treesMaxReliefSlope = 45;
     [HideInInspector]
-    public string _folderName;
-    [HideInInspector]
-    public SplatPrototype[] terrainTexture = new SplatPrototype[1];
-    [HideInInspector]
-    public Texture2D TerTexture;
-
-    private GameObject _terrainOrigin;
-    private TerrainData _terrainData;
-    private int _hightMapRezaliton = 0;
-
-    [HideInInspector]
     public int _treeSpacing = 30;
     [HideInInspector]
     public GameObject[] Trees;
 
-    public Texture2D[] Details;
     private TreePrototype[] _treeData;
+    #endregion]
+
+    #region Grass_Properties
+    [HideInInspector]
+    public int _grassMaxReliefSlope = 40;
+    [HideInInspector]
+    public Texture2D Grass;
+
     private DetailPrototype[] _detailData;
+   
+    #endregion
+
+    #region Texture_Properties
+    public SplatPrototype[] terrainTexture = new SplatPrototype[1];
+    [HideInInspector]
+    public Texture2D TerTexture;
+   
+    #endregion
+
+    #endregion
 
     #region detail_settings
     public DetailRenderMode detailMode;
     public int m_detailObjectDistance = 400; //The distance at which details will no longer be drawn
     public float m_detailObjectDensity = 4.0f; //Creates more dense details within patch// biežums
     public int m_detailResolutionPerPatch = 32; //The size of detail patch. A higher number may reduce draw calls as details will be batch in larger patches
-    public float m_wavingGrassStrength = 0.4f;
-    public float m_wavingGrassAmount = 0.2f;
-    public float m_wavingGrassSpeed = 0.4f;
-    public Color m_wavingGrassTint = Color.green;
-    public Color m_grassHealthyColor = Color.green;
-    public Color m_grassDryColor = Color.grey;
+    //public float m_wavingGrassStrength = 0.4f;
+    //public float m_wavingGrassAmount = 0.2f;
+    //public float m_wavingGrassSpeed = 0.4f;
+    //public Color m_wavingGrassTint = Color.green;
+    //public Color m_grassHealthyColor = Color.green;
+    //public Color m_grassDryColor = Color.grey;
 
     #endregion
 
     public void Start()
     {
-        _hightMapRezaliton = GetTerrainRezalution(_resalutionSelekted);
+        _hightMapRezaliton = GetTerrainRezalution(_resolutionSelected);
         _splitCount = _splitCountID + 2;
-
         CreateProtoTypes();
-
         CreateTerrain();
         FillTreeInstances(_terrainOrigin.GetComponent<Terrain>());
         FillDetailMap(_terrainOrigin.GetComponent<Terrain>());
@@ -93,13 +111,14 @@ public class TerrainGeneratorRT : MonoBehaviour
         enableAll();
         SetPlayerPozition();
 
-
     }
 
     private void Update()
     {
         playerMove();
     }
+
+    #region Add_Terrain_Grass_Trees_Textures
 
     void CreateProtoTypes()
     {
@@ -112,14 +131,22 @@ public class TerrainGeneratorRT : MonoBehaviour
                 _treeData[i].prefab = Trees[i];
             }
         }
+        if (_addTexture)
+        {
+            terrainTexture[0] = new SplatPrototype();
+            terrainTexture[0].texture = TerTexture;
+        }
 
-        _detailData = new DetailPrototype[Details.Length];
+        if (_addGrass)
+        {
+            _detailData = new DetailPrototype[1];
 
-        _detailData[0] = new DetailPrototype();
-        _detailData[0].prototypeTexture = Details[0];
-        _detailData[0].renderMode = detailMode;
-        _detailData[0].healthyColor = m_grassHealthyColor;
-        _detailData[0].dryColor = m_grassDryColor;
+            _detailData[0] = new DetailPrototype();
+            _detailData[0].prototypeTexture = Grass;
+            _detailData[0].renderMode = detailMode;
+            //   _detailData[0].healthyColor = m_grassHealthyColor;
+            //   _detailData[0].dryColor = m_grassDryColor;
+        }
 
     }
 
@@ -167,18 +194,13 @@ public class TerrainGeneratorRT : MonoBehaviour
 
             }
         }
-
-        //terrain.treeDistance = m_treeDistance;
-        //terrain.treeBillboardDistance = m_treeBillboardDistance;
-        //terrain.treeCrossFadeLength = m_treeCrossFadeLength;
-        //terrain.treeMaximumFullLODCount = m_treeMaximumFullLODCount;
     }
 
     void FillDetailMap(Terrain terrain)
-    {//each layer is drawn separately so if you have a lot of layers your draw calls will increase 
-        int[,] detailMap0 = new int[(int)terrain.terrainData.size.x, (int)terrain.terrainData.size.z];
+    {
+        if (!_addGrass) return;
 
-
+        int[,] grassMap = new int[(int)terrain.terrainData.size.x, (int)terrain.terrainData.size.z];
 
         for (int x = 0; x < terrain.terrainData.size.x; x++)
         {
@@ -193,157 +215,32 @@ public class TerrainGeneratorRT : MonoBehaviour
                 float normX = x * unitx + offsetX;
                 float normZ = z * unitz + offsetZ;
 
-                // Get the steepness value at the normalized coordinate.
                 float angle = terrain.terrainData.GetSteepness(normX, normZ);
 
-                // Steepness is given as an angle, 0..90 degrees. Divide
-                // by 90 to get an alpha blending value in the range 0..1.
-                float frac = angle / 90.0f;
+                if (angle < _grassMaxReliefSlope)
+                    grassMap[z, x] = 1;
 
-                if (frac < 0.5f)
-                {
-
-                    //TODO: add terrain area check here to prevent details at hight slope areas
-
-
-                    detailMap0[z, x] = 1;
-
-
-                }
 
             }
         }
 
-        terrain.terrainData.wavingGrassStrength = m_wavingGrassStrength;
-        terrain.terrainData.wavingGrassAmount = m_wavingGrassAmount;
-        terrain.terrainData.wavingGrassSpeed = m_wavingGrassSpeed;
-        terrain.terrainData.wavingGrassTint = m_wavingGrassTint;
-        terrain.detailObjectDensity = m_detailObjectDensity;
-        terrain.detailObjectDistance = m_detailObjectDistance;
-        terrain.terrainData.SetDetailResolution((int)terrain.terrainData.size.x, m_detailResolutionPerPatch);
-
-        terrain.terrainData.SetDetailLayer(0, 0, 0, detailMap0);
-
-
-
-    }
+        //terrain.terrainData.wavingGrassStrength = m_wavingGrassStrength;
+        //terrain.terrainData.wavingGrassAmount = m_wavingGrassAmount;
+        //terrain.terrainData.wavingGrassSpeed = m_wavingGrassSpeed;
+        //terrain.terrainData.wavingGrassTint = m_wavingGrassTint;
+        //  terrain.detailObjectDensity = 100;
+        // terrain.detailObjectDistance = 100000;
+        Debug.Log(_terrainData.detailResolution);
+        terrain.terrainData.SetDetailResolution(_terrainData.detailResolution, 8);
+        terrain.terrainData.SetDetailLayer(0, 0, 0, grassMap);
 
 
-    private void SetPlayerPozition()
-    {
-        RaycastHit hit;
-        Ray ray = new Ray(new Vector3(_terrainSizeData.x / 2, _terrainSizeData.y, _terrainSizeData.z / 2) + Vector3.up * 100, Vector3.down);
-
-        if (Physics.Raycast(ray, out hit, Mathf.Infinity))
-        {
-            if (hit.collider != null)
-            {
-                player.transform.position = new Vector3(_terrainSizeData.x / 2, hit.point.y + 2, _terrainSizeData.z / 2);
-            }
-        }
-    }
-
-
-    #region splited terrain generation
-    private void playerMove()
-    {
-        if (!_splitTerrain) return;
-        foreach (GameObject g in _terrainList)
-        {
-
-            Vector3 centre = new Vector3(g.transform.position.x + (_step / 2), 0, g.transform.position.z + (_step / 2));
-
-            float distance = Vector3.Distance(new Vector3(player.transform.position.x, 0, player.transform.position.z), centre);
-
-            if (distance < _radiusOfGeneration)
-                g.SetActive(true);
-            if (distance > _radiusOfGeneration * 2)
-                if (g.active)
-                    g.SetActive(false);
-        }
-    }
-
-    private void enableAll()
-    {
-        if (!_splitTerrain) return;
-        foreach (GameObject g in _terrainList)
-        {
-            g.SetActive(false);
-        }
-    }
-    #endregion
-
-    #region Create terran from file
-    public void CreateTerrain()
-    {
-        _terrainData = new TerrainData
-        {
-            heightmapResolution = _hightMapRezaliton,
-            size = _terrainSizeData,
-            treePrototypes = _treeData,
-            detailPrototypes = _detailData
-        };
-
-        LoadTerrain(_filePath, _terrainData);
-        _terrainOrigin = Terrain.CreateTerrainGameObject(_terrainData);
-        _terrainOrigin.transform.parent = transform;
 
     }
-
-    void LoadTerrain(string aFileName, TerrainData aTerrain)
-    {
-        int h = aTerrain.heightmapHeight;
-        int w = aTerrain.heightmapWidth;
-        float[,] data = new float[h, w];
-        using (var file = System.IO.File.OpenRead(aFileName))
-        using (var reader = new System.IO.BinaryReader(file))
-        {
-            for (int y = 0; y < h; y++)
-            {
-                for (int x = 0; x < w; x++)
-                {
-                    float v = (float)reader.ReadUInt16() / 0xFFFF;
-                    data[y, x] = v;
-                }
-            }
-        }
-        aTerrain.SetHeights(0, 0, data);
-    }
-
-    private int GetTerrainRezalution(int arrayIndex)
-    {
-        switch (arrayIndex)
-        {
-            case 0:
-                return 33;
-            case 1:
-                return 65;
-            case 2:
-                return 129;
-            case 3:
-                return 257;
-            case 4:
-                return 513;
-            case 5:
-                return 1025;
-            case 6:
-                return 2049;
-            case 7:
-                return 4097;
-            default:
-                return 0;
-        }
-    }
-
-    #endregion
-
-    #region Add texture
 
     public void Addtexturess(TerrainData terrainData)
     {
         if (!_addTexture) return;
-        terrainTexture[0] = new SplatPrototype();
-        terrainTexture[0].texture = TerTexture;
         terrainData.splatPrototypes = terrainTexture;
 
         //float[,,] map = new float[terrainData.alphamapWidth, terrainData.alphamapHeight, terrainTexture.Length];
@@ -408,10 +305,124 @@ public class TerrainGeneratorRT : MonoBehaviour
         // // Finally assign the new splatmap to the terrainData:
         // terrainData.SetAlphamaps(0, 0, splatmapData);
     }
+    #endregion
+
+    #region Set_Player_Start_Position
+
+    private void SetPlayerPozition()
+    {
+        RaycastHit hit;
+        Ray ray = new Ray(new Vector3(_terrainSizeData.x / 2, _terrainSizeData.y, _terrainSizeData.z / 2) + Vector3.up * 100, Vector3.down);
+
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity))
+        {
+            if (hit.collider != null)
+            {
+                player.transform.position = new Vector3(_terrainSizeData.x / 2, hit.point.y + 2, _terrainSizeData.z / 2);
+            }
+        }
+    }
+    #endregion
+
+    #region Split_Terrain_Generation
+
+    private void playerMove()
+    {
+        if (!_splitTerrain) return;
+        foreach (GameObject g in _terrainList)
+        {
+
+            Vector3 centre = new Vector3(g.transform.position.x + (_step / 2), 0, g.transform.position.z + (_step / 2));
+
+            float distance = Vector3.Distance(new Vector3(player.transform.position.x, 0, player.transform.position.z), centre);
+
+            if (distance < _radiusOfGeneration)
+                g.SetActive(true);
+            if (distance > _radiusOfGeneration * 2)
+                if (g.active)
+                    g.SetActive(false);
+        }
+    }
+
+    private void enableAll()
+    {
+        if (!_splitTerrain) return;
+        foreach (GameObject g in _terrainList)
+        {
+            g.SetActive(false);
+        }
+    }
+    #endregion
+
+    #region Create_Terran_From_File
+
+    public void CreateTerrain()
+    {
+        _terrainData = new TerrainData
+        {
+            heightmapResolution = _hightMapRezaliton,
+            size = _terrainSizeData,
+            treePrototypes = _treeData,
+            detailPrototypes = _detailData
+
+
+        };
+
+        LoadTerrain(_filePath, _terrainData);
+        _terrainOrigin = Terrain.CreateTerrainGameObject(_terrainData);
+        _terrainOrigin.transform.parent = transform;
+        Debug.Log(_terrainData.detailResolution);
+    }
+
+    void LoadTerrain(string aFileName, TerrainData aTerrain)
+    {
+        int h = aTerrain.heightmapHeight;
+        int w = aTerrain.heightmapWidth;
+        float[,] data = new float[h, w];
+        using (var file = System.IO.File.OpenRead(aFileName))
+        using (var reader = new System.IO.BinaryReader(file))
+        {
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float v = (float)reader.ReadUInt16() / 0xFFFF;
+                    data[y, x] = v;
+                }
+            }
+        }
+        aTerrain.SetHeights(0, 0, data);
+    }
+
+    private int GetTerrainRezalution(int arrayIndex)
+    {
+        switch (arrayIndex)
+        {
+            case 0:
+                return 33;
+            case 1:
+                return 65;
+            case 2:
+                return 129;
+            case 3:
+                return 257;
+            case 4:
+                return 513;
+            case 5:
+                return 1025;
+            case 6:
+                return 2049;
+            case 7:
+                return 4097;
+            default:
+                return 0;
+        }
+    }
 
     #endregion
 
-    #region Split terrain
+    #region Split_Terrain
+
     public void SplitTerrain()
     {
         if (!_splitTerrain) return;
@@ -491,6 +502,10 @@ public class TerrainGeneratorRT : MonoBehaviour
         td.treePrototypes = origTerrain.terrainData.treePrototypes;
         td.detailPrototypes = origTerrain.terrainData.detailPrototypes;
 
+        float xMinNorm = xMin / origTerrain.terrainData.size.x;
+        float xMaxNorm = xMax / origTerrain.terrainData.size.x;
+        float zMinNorm = zMin / origTerrain.terrainData.size.z;
+        float zMaxNorm = zMax / origTerrain.terrainData.size.z;
 
         float dimRatio1, dimRatio2;
 
@@ -512,6 +527,39 @@ public class TerrainGeneratorRT : MonoBehaviour
 
         td.alphamapResolution = alphamapResolution;
 
+        // Tree
+        for (int i = 0; i < origTerrain.terrainData.treeInstanceCount; i++)
+        {
+            TreeInstance ti = origTerrain.terrainData.treeInstances[i];
+            if (ti.position.x < xMinNorm || ti.position.x >= xMaxNorm)
+                continue;
+            if (ti.position.z < zMinNorm || ti.position.z >= zMaxNorm)
+                continue;
+            ti.position = new Vector3(((ti.position.x * origTerrain.terrainData.size.x) - xMin) / (xMax - xMin), ti.position.y, ((ti.position.z * origTerrain.terrainData.size.z) - zMin) / (zMax - zMin));
+            newTerrain.AddTreeInstance(ti);
+        }
+        //grass
+        for (int layer = 0; layer < origTerrain.terrainData.detailPrototypes.Length; layer++)
+        {
+            int[,] detailLayer = origTerrain.terrainData.GetDetailLayer(
+                    Mathf.FloorToInt(xMinNorm * origTerrain.terrainData.detailWidth),
+                    Mathf.FloorToInt(zMinNorm * origTerrain.terrainData.detailHeight),
+                    Mathf.FloorToInt((xMaxNorm - xMinNorm) * origTerrain.terrainData.detailWidth),
+                    Mathf.FloorToInt((zMaxNorm - zMinNorm) * origTerrain.terrainData.detailHeight),
+                    layer);
+            int[,] newDetailLayer = new int[detailResolution, detailResolution];
+            dimRatio1 = (float)detailLayer.GetLength(0) / detailResolution;
+            dimRatio2 = (float)detailLayer.GetLength(1) / detailResolution;
+            for (int i = 0; i < newDetailLayer.GetLength(0); i++)
+            {
+                for (int j = 0; j < newDetailLayer.GetLength(1); j++)
+                {
+                    newDetailLayer[i, j] = detailLayer[Mathf.FloorToInt(i * dimRatio1), Mathf.FloorToInt(j * dimRatio2)];
+                }
+            }
+            td.SetDetailLayer(0, 0, layer, newDetailLayer);
+        }
+
         TerGameObeject.transform.position = new Vector3(origTerrain.transform.position.x + xMin, origTerrain.transform.position.y, origTerrain.transform.position.z + zMin);
         TerGameObeject.name = newName;
 
@@ -520,7 +568,9 @@ public class TerrainGeneratorRT : MonoBehaviour
         td.size = new Vector3(xMax - xMin, origTerrain.terrainData.size.y, zMax - zMin);
 
         _terrainList.Add(TerGameObeject);
+
     }
+
 
     void stitchTerrain(GameObject center, GameObject left, GameObject top)
     {
