@@ -17,19 +17,8 @@ public class TerrainGeneratorEditor : Editor
 
 
 
-    #region detail_settings
-    public DetailRenderMode detailMode;
     public int m_detailObjectDistance = 400; //The distance at which details will no longer be drawn
-    public float m_detailObjectDensity = 4.0f; //Creates more dense details within patch// biežums
-    public int m_detailResolutionPerPatch = 32; //The size of detail patch. A higher number may reduce draw calls as details will be batch in larger patches
-    public float m_wavingGrassStrength = 0.4f;
-    public float m_wavingGrassAmount = 0.2f;
-    public float m_wavingGrassSpeed = 0.4f;
-    public Color m_wavingGrassTint = Color.green;
-    public Color m_grassHealthyColor = Color.green;
-    public Color m_grassDryColor = Color.grey;
 
-    #endregion
 
     public override void OnInspectorGUI()
     {
@@ -133,8 +122,8 @@ public class TerrainGeneratorEditor : Editor
 
             _terGen._grassMaxReliefSlope = EditorGUILayout.IntSlider("Max angel for grass gen", _terGen._grassMaxReliefSlope, 0, 90);
             _terGen.Grass = (Texture2D)EditorGUILayout.ObjectField("Grass texture", _terGen.Grass, typeof(Texture2D), false);
-
-
+            EditorGUILayout.HelpBox("Distance at which details will no longer be drawn", MessageType.None);
+            _terGen._grassDistance = EditorGUILayout.IntField("Distance", _terGen._grassDistance);
 
         }
         #endregion
@@ -155,6 +144,8 @@ public class TerrainGeneratorEditor : Editor
                 Addtexturess(_terGen._terrainData);
             if (_terGen._addTrees)
                 FillTreeInstances(_terGen._terrainOrigin.GetComponent<Terrain>());
+            if (_terGen._addGrass)
+                FillDetailMap(_terGen._terrainOrigin.GetComponent<Terrain>());
 
             if (_terGen._splitTerrain)
                 SplitTerrain();
@@ -162,9 +153,6 @@ public class TerrainGeneratorEditor : Editor
         }
         #endregion
 
-        EditorUtility.SetDirty(_terGen);
-
-        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
     }
 
 
@@ -208,13 +196,15 @@ public class TerrainGeneratorEditor : Editor
         }
 
 
-        //_detailData = new DetailPrototype[Details.Length];
 
-        //_detailData[0] = new DetailPrototype();
-        //_detailData[0].prototypeTexture = Details[0];
-        //_detailData[0].renderMode = detailMode;
-        //_detailData[0].healthyColor = m_grassHealthyColor;
-        //_detailData[0].dryColor = m_grassDryColor;
+        if (_terGen._addGrass)
+        {
+            _terGen._detailData = new DetailPrototype[1];
+
+            _terGen._detailData[0] = new DetailPrototype();
+            _terGen._detailData[0].prototypeTexture = _terGen.Grass;
+            _terGen._detailData[0].renderMode = DetailRenderMode.GrassBillboard;
+        }
 
     }
 
@@ -254,7 +244,6 @@ public class TerrainGeneratorEditor : Editor
                         temp.heightScale = 1;
                         temp.color = Color.white;
                         temp.lightmapColor = Color.white;
-                        Debug.Log(_terGen._treeData[0].prefab);
                         terrain.AddTreeInstance(temp);
 
                     }
@@ -262,18 +251,14 @@ public class TerrainGeneratorEditor : Editor
 
             }
         }
-
-        //terrain.treeDistance = m_treeDistance;
-        //terrain.treeBillboardDistance = m_treeBillboardDistance;
-        //terrain.treeCrossFadeLength = m_treeCrossFadeLength;
-        //terrain.treeMaximumFullLODCount = m_treeMaximumFullLODCount;
     }
 
     void FillDetailMap(Terrain terrain)
-    {//each layer is drawn separately so if you have a lot of layers your draw calls will increase 
+    {
+       
+        if (!_terGen._addGrass) return;
+
         int[,] detailMap0 = new int[(int)terrain.terrainData.size.x, (int)terrain.terrainData.size.z];
-
-
 
         for (int x = 0; x < terrain.terrainData.size.x; x++)
         {
@@ -288,35 +273,18 @@ public class TerrainGeneratorEditor : Editor
                 float normX = x * unitx + offsetX;
                 float normZ = z * unitz + offsetZ;
 
-                // Get the steepness value at the normalized coordinate.
                 float angle = terrain.terrainData.GetSteepness(normX, normZ);
 
-                // Steepness is given as an angle, 0..90 degrees. Divide
-                // by 90 to get an alpha blending value in the range 0..1.
-                float frac = angle / 90.0f;
-
-                if (frac < 0.5f)
-                {
-
-                    //TODO: add terrain area check here to prevent details at hight slope areas
-
+                if (angle < _terGen._treesMaxReliefSlope)
 
                     detailMap0[z, x] = 1;
-
-
-                }
+     
 
             }
         }
 
-        terrain.terrainData.wavingGrassStrength = m_wavingGrassStrength;
-        terrain.terrainData.wavingGrassAmount = m_wavingGrassAmount;
-        terrain.terrainData.wavingGrassSpeed = m_wavingGrassSpeed;
-        terrain.terrainData.wavingGrassTint = m_wavingGrassTint;
-        terrain.detailObjectDensity = m_detailObjectDensity;
-        terrain.detailObjectDistance = m_detailObjectDistance;
-        terrain.terrainData.SetDetailResolution((int)terrain.terrainData.size.x, m_detailResolutionPerPatch);
-
+        terrain.detailObjectDistance = _terGen._grassDistance;
+        terrain.terrainData.SetDetailResolution(512, 8);
         terrain.terrainData.SetDetailLayer(0, 0, 0, detailMap0);
 
 

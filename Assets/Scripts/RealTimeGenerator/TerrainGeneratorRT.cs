@@ -70,33 +70,22 @@ public class TerrainGeneratorRT : MonoBehaviour
     public int _grassMaxReliefSlope = 40;
     [HideInInspector]
     public Texture2D Grass;
+    [HideInInspector]
+    public int _grassDistance = 400;
 
     private DetailPrototype[] _detailData;
-   
+
     #endregion
 
     #region Texture_Properties
     public SplatPrototype[] terrainTexture = new SplatPrototype[1];
     [HideInInspector]
     public Texture2D TerTexture;
-   
-    #endregion
 
     #endregion
 
-    #region detail_settings
-    public DetailRenderMode detailMode;
-    public int m_detailObjectDistance = 400; //The distance at which details will no longer be drawn
-    public float m_detailObjectDensity = 4.0f; //Creates more dense details within patch// biežums
-    public int m_detailResolutionPerPatch = 32; //The size of detail patch. A higher number may reduce draw calls as details will be batch in larger patches
-    //public float m_wavingGrassStrength = 0.4f;
-    //public float m_wavingGrassAmount = 0.2f;
-    //public float m_wavingGrassSpeed = 0.4f;
-    //public Color m_wavingGrassTint = Color.green;
-    //public Color m_grassHealthyColor = Color.green;
-    //public Color m_grassDryColor = Color.grey;
-
     #endregion
+
 
     public void Start()
     {
@@ -143,9 +132,7 @@ public class TerrainGeneratorRT : MonoBehaviour
 
             _detailData[0] = new DetailPrototype();
             _detailData[0].prototypeTexture = Grass;
-            _detailData[0].renderMode = detailMode;
-            //   _detailData[0].healthyColor = m_grassHealthyColor;
-            //   _detailData[0].dryColor = m_grassDryColor;
+            _detailData[0].renderMode = DetailRenderMode.GrassBillboard;
         }
 
     }
@@ -223,15 +210,8 @@ public class TerrainGeneratorRT : MonoBehaviour
 
             }
         }
-
-        //terrain.terrainData.wavingGrassStrength = m_wavingGrassStrength;
-        //terrain.terrainData.wavingGrassAmount = m_wavingGrassAmount;
-        //terrain.terrainData.wavingGrassSpeed = m_wavingGrassSpeed;
-        //terrain.terrainData.wavingGrassTint = m_wavingGrassTint;
-        //  terrain.detailObjectDensity = 100;
-        // terrain.detailObjectDistance = 100000;
-        Debug.Log(_terrainData.detailResolution);
-        terrain.terrainData.SetDetailResolution(_terrainData.detailResolution, 8);
+        terrain.detailObjectDistance = _grassDistance;
+        terrain.terrainData.SetDetailResolution(512, 8);
         terrain.terrainData.SetDetailLayer(0, 0, 0, grassMap);
 
 
@@ -371,7 +351,6 @@ public class TerrainGeneratorRT : MonoBehaviour
         LoadTerrain(_filePath, _terrainData);
         _terrainOrigin = Terrain.CreateTerrainGameObject(_terrainData);
         _terrainOrigin.transform.parent = transform;
-        Debug.Log(_terrainData.detailResolution);
     }
 
     void LoadTerrain(string aFileName, TerrainData aTerrain)
@@ -451,7 +430,6 @@ public class TerrainGeneratorRT : MonoBehaviour
             {
 
                 GameObject center = GameObject.Find(string.Format("{0}{1}_{2}", _originalTerrain.name, x, z));
-                Debug.Log(center);
                 GameObject left = GameObject.Find(string.Format("{0}{1}_{2}", _originalTerrain.name, x - 1, z));
                 GameObject top = GameObject.Find(string.Format("{0}{1}_{2}", _originalTerrain.name, x, z + 1));
                 stitchTerrain(center, left, top);

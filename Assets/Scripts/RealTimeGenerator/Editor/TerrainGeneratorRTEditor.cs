@@ -116,9 +116,8 @@ public class TerrainGeneratorRTEditor : Editor
          
             _terGen._grassMaxReliefSlope = EditorGUILayout.IntSlider("Max angel for grass gen", _terGen._grassMaxReliefSlope, 0, 90);
             _terGen.Grass = (Texture2D)EditorGUILayout.ObjectField("Grass texture", _terGen.Grass, typeof(Texture2D), false);
-
-
-
+           EditorGUILayout.HelpBox("Distance at which details will no longer be drawn", MessageType.None);
+            _terGen._grassDistance = EditorGUILayout.IntField("Distance", _terGen._grassDistance);
         }
         #endregion
 

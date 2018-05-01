@@ -62,6 +62,8 @@ public class TerrainGenerator : MonoBehaviour {
     public Texture2D Grass;
     [HideInInspector]
     public DetailPrototype[] _detailData;
+    [HideInInspector]
+    public int _grassDistance = 400;
     #endregion
 
     #region Texture_Properties
