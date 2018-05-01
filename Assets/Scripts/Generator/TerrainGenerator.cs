@@ -51,7 +51,9 @@ public class TerrainGenerator : MonoBehaviour {
     public int _treesMaxReliefSlope = 45;
     [HideInInspector]
     public GameObject[] Trees;
+    [HideInInspector]
     public GameObject[] _treesArr;
+    [HideInInspector]
     public TreePrototype[] _treeData;
     #endregion
 
