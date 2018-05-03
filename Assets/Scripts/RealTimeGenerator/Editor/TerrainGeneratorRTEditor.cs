@@ -20,77 +20,77 @@ public class TerrainGeneratorRTEditor : Editor
 
         #region Select_Terrain_File
 
-        if (_terGen._filePath == null)
+        if (_terGen._FilePath == null)
             EditorGUILayout.HelpBox("Select file!", MessageType.Warning);
         else
-            EditorGUILayout.HelpBox("Selected file path: " + _terGen._filePath, MessageType.Info);
+            EditorGUILayout.HelpBox("Selected file path: " + _terGen._FilePath, MessageType.Info);
 
         if (GUILayout.Button("Select terrain file"))
-            _terGen._filePath = EditorUtility.OpenFilePanel("Select terrain file", "", "raw");
+            _terGen._FilePath = EditorUtility.OpenFilePanel("Select terrain file", "", "raw");
         #endregion
 
         #region Set_Terrain_Properties
 
-        if (_terGen._resolutionSelected < 0)
+        if (_terGen._ResolutionSelected < 0)
             EditorGUILayout.HelpBox("Select resalution!", MessageType.Warning);
 
         EditorGUILayout.HelpBox("Terrain resalution can be only the same as terrain file or smaller", MessageType.None);
-        _terGen._resolutionSelected = EditorGUILayout.Popup("Terain resulation: ", _terGen._resolutionSelected, _resalution);
+        _terGen._ResolutionSelected = EditorGUILayout.Popup("Terain resulation: ", _terGen._ResolutionSelected, _resalution);
 
         EditorGUILayout.HelpBox("Terrain data: X = Width, Y = Height, Z = Length", MessageType.None);
 
 
-        if (_terGen._terrainSizeData.x <= 0 || _terGen._terrainSizeData.y <= 0 || _terGen._terrainSizeData.z <= 0)
+        if (_terGen._TerrainSizeData.x <= 0 || _terGen._TerrainSizeData.y <= 0 || _terGen._TerrainSizeData.z <= 0)
             EditorGUILayout.HelpBox("Add terrain size!", MessageType.Error);
 
 
-        _terGen._terrainSizeData = EditorGUILayout.Vector3IntField("Terrain size:", _terGen._terrainSizeData);
+        _terGen._TerrainSizeData = EditorGUILayout.Vector3IntField("Terrain size:", _terGen._TerrainSizeData);
         #endregion
 
         #region Split_Terrain
 
-        _terGen._splitTerrain = EditorGUILayout.Toggle("Split terrain", _terGen._splitTerrain);
+        _terGen._SplitTerrain = EditorGUILayout.Toggle("Split terrain", _terGen._SplitTerrain);
 
-        if (_terGen._splitTerrain)
+        if (_terGen._SplitTerrain)
         {
-            _terGen._splitCountID = EditorGUILayout.Popup("Number of pieces", _terGen._splitCountID, _choices);
+            _terGen._SplitCountID = EditorGUILayout.Popup("Number of pieces", _terGen._SplitCountID, _choices);
 
-            if (_terGen._terrainSizeData.x <= _terGen._terrainSizeData.z)
-                _step = _terGen._terrainSizeData.z / (_terGen._splitCountID + 2);
+            if (_terGen._TerrainSizeData.x <= _terGen._TerrainSizeData.z)
+                _step = _terGen._TerrainSizeData.z / (_terGen._SplitCountID + 2);
             else
-                _step = _terGen._terrainSizeData.x / (_terGen._splitCountID + 2);
+                _step = _terGen._TerrainSizeData.x / (_terGen._SplitCountID + 2);
 
-            _terGen._radiusOfGeneration = EditorGUILayout.IntSlider("Radius of generation:", _terGen._radiusOfGeneration, _step, _step * (_terGen._splitCountID + 2));
+            _terGen._RadiusOfGeneration = EditorGUILayout.IntSlider("Radius of generation:", _terGen._RadiusOfGeneration, _step, _step * (_terGen._SplitCountID + 2));
 
         }
         #endregion
 
         #region Add_Texture
 
-        _terGen._addTexture = EditorGUILayout.Toggle("Add Texture", _terGen._addTexture);
+        _terGen._AddTexture = EditorGUILayout.Toggle("Add Texture", _terGen._AddTexture);
 
-        if (_terGen._addTexture)
+        if (_terGen._AddTexture)
 
-            _terGen.TerTexture = (Texture2D)EditorGUILayout.ObjectField("Texture", _terGen.TerTexture, typeof(Texture2D), false);
+            _terGen._TerTexture = (Texture2D)EditorGUILayout.ObjectField("Texture", _terGen._TerTexture, typeof(Texture2D), false);
         #endregion
 
         #region Add_Trees
 
-        _terGen._addTrees = EditorGUILayout.Toggle("Add Trees", _terGen._addTrees);
-        if (_terGen._addTrees)
+        _terGen._AddTrees = EditorGUILayout.Toggle("Add Trees", _terGen._AddTrees);
+        if (_terGen._AddTrees)
         {
-            _terGen._treeSpacing = EditorGUILayout.IntSlider("Trees spacing", _terGen._treeSpacing, 1, _terGen._terrainSizeData.x / 2);
-            _terGen._treesMaxReliefSlope = EditorGUILayout.IntSlider("Max anngel for tree gen", _terGen._treesMaxReliefSlope, 0, 90);
-            _terGen._treesPrefabCount = EditorGUILayout.IntSlider("Trees prefab count", _terGen._treesPrefabCount, 1, 24);
+            _terGen._TreeSpacing = EditorGUILayout.IntSlider("Trees spacing", _terGen._TreeSpacing, 1, _terGen._TerrainSizeData.x / 2);
+            _terGen._TreesMaxReliefSlope = EditorGUILayout.IntSlider("Max anngel for tree gen", _terGen._TreesMaxReliefSlope, 0, 90);
+            _terGen._TreesPrefabCount = EditorGUILayout.IntSlider("Trees prefab count", _terGen._TreesPrefabCount, 1, 24);
 
-            if (_terGen._treesPrefabCount != _terGen._Trees.Length)
+            if (_terGen._TreesPrefabCount != _terGen._Trees.Length)
                 EditorGUILayout.HelpBox("Press button to recauclate Trees prefab count ", MessageType.Info);
 
             if (GUILayout.Button("Recauculate prefab count", GUILayout.ExpandWidth(false)))
             {
 
-                if (_terGen._treesPrefabCount == _terGen._Trees.Length) return;
-                _treesArr = new GameObject[_terGen._treesPrefabCount];
+                if (_terGen._TreesPrefabCount == _terGen._Trees.Length) return;
+                _treesArr = new GameObject[_terGen._TreesPrefabCount];
                 _terGen._Trees = _treesArr;
 
 
@@ -110,14 +110,14 @@ public class TerrainGeneratorRTEditor : Editor
 
         #region Add_Grass
 
-        _terGen._addGrass = EditorGUILayout.Toggle("Add Grass", _terGen._addGrass);
-        if (_terGen._addGrass)
+        _terGen._AddGrass = EditorGUILayout.Toggle("Add Grass", _terGen._AddGrass);
+        if (_terGen._AddGrass)
         {
          
-            _terGen._grassMaxReliefSlope = EditorGUILayout.IntSlider("Max angel for grass gen", _terGen._grassMaxReliefSlope, 0, 90);
-            _terGen.Grass = (Texture2D)EditorGUILayout.ObjectField("Grass texture", _terGen.Grass, typeof(Texture2D), false);
+            _terGen._GrassMaxReliefSlope = EditorGUILayout.IntSlider("Max angel for grass gen", _terGen._GrassMaxReliefSlope, 0, 90);
+            _terGen._Grass = (Texture2D)EditorGUILayout.ObjectField("Grass texture", _terGen._Grass, typeof(Texture2D), false);
            EditorGUILayout.HelpBox("Distance at which details will no longer be drawn", MessageType.None);
-            _terGen._grassDistance = EditorGUILayout.IntField("Distance", _terGen._grassDistance);
+            _terGen._GrassDistance = EditorGUILayout.IntField("Distance", _terGen._GrassDistance);
         }
         #endregion
 

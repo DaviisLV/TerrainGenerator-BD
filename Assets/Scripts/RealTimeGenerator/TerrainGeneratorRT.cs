@@ -14,11 +14,11 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     #region Terain_Properties
     [HideInInspector]
-    public Vector3Int _terrainSizeData;
+    public Vector3Int _TerrainSizeData;
     [HideInInspector]
-    public string _filePath;
+    public string _FilePath;
     [HideInInspector]
-    public int _resolutionSelected = -1;
+    public int _ResolutionSelected = -1;
 
     private GameObject _terrainOrigin;
     private TerrainData _terrainData;
@@ -27,38 +27,38 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     #region All_Booleans
     [HideInInspector]
-    public bool _splitTerrain = false;
+    public bool _SplitTerrain = false;
     [HideInInspector]
-    public bool _addTexture = false;
+    public bool _AddTexture = false;
     [HideInInspector]
-    public bool _addTrees = false;
+    public bool _AddTrees = false;
     [HideInInspector]
-    public bool _addGrass = false;
+    public bool _AddGrass = false;
     #endregion
 
     #region Terrain_Split
     [HideInInspector]
-    public int _splitCount;
+    public int _SplitCount;
     [HideInInspector]
-    public int _splitCountID;
+    public int _SplitCountID;
     [HideInInspector]
     #endregion
 
     #region Runtime_Path_Generation
-    public int _radiusOfGeneration = 0;
+    public int _RadiusOfGeneration = 0;
     [HideInInspector]
-    public float _step;
+    public float _Step;
     [HideInInspector]
-    public List<GameObject> _terrainList;
+    public List<GameObject> _TerrainList;
     #endregion
 
     #region Trees_Properties
     [HideInInspector]
-    public int _treesPrefabCount =0;
+    public int _TreesPrefabCount =0;
     [HideInInspector]
-    public int _treesMaxReliefSlope = 45;
+    public int _TreesMaxReliefSlope = 45;
     [HideInInspector]
-    public int _treeSpacing = 30;
+    public int _TreeSpacing = 30;
     [HideInInspector]
     public GameObject[] _Trees = new GameObject[0];
 
@@ -67,20 +67,20 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     #region Grass_Properties
     [HideInInspector]
-    public int _grassMaxReliefSlope = 40;
+    public int _GrassMaxReliefSlope = 40;
     [HideInInspector]
-    public Texture2D Grass;
+    public Texture2D _Grass;
     [HideInInspector]
-    public int _grassDistance = 400;
+    public int _GrassDistance = 400;
 
     private DetailPrototype[] _detailData;
 
     #endregion
 
     #region Texture_Properties
-    public SplatPrototype[] terrainTexture = new SplatPrototype[1];
+    public SplatPrototype[] _TerrainTexture = new SplatPrototype[1];
     [HideInInspector]
-    public Texture2D TerTexture;
+    public Texture2D _TerTexture;
 
     #endregion
 
@@ -89,8 +89,8 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     public void Start()
     {
-        _hightMapRezaliton = GetTerrainRezalution(_resolutionSelected);
-        _splitCount = _splitCountID + 2;
+        _hightMapRezaliton = GetTerrainRezalution(_ResolutionSelected);
+        _SplitCount = _SplitCountID + 2;
         CreateProtoTypes();
         CreateTerrain();
         FillTreeInstances(_terrainOrigin.GetComponent<Terrain>());
@@ -111,7 +111,7 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     void CreateProtoTypes()
     {
-        if (_addTrees)
+        if (_AddTrees)
         {
             _treeData = new TreePrototype[_Trees.Length];
             for (int i = 0; i < _Trees.Length; i++)
@@ -120,18 +120,18 @@ public class TerrainGeneratorRT : MonoBehaviour
                 _treeData[i].prefab = _Trees[i];
             }
         }
-        if (_addTexture)
+        if (_AddTexture)
         {
-            terrainTexture[0] = new SplatPrototype();
-            terrainTexture[0].texture = TerTexture;
+            _TerrainTexture[0] = new SplatPrototype();
+            _TerrainTexture[0].texture = _TerTexture;
         }
 
-        if (_addGrass)
+        if (_AddGrass)
         {
             _detailData = new DetailPrototype[1];
 
             _detailData[0] = new DetailPrototype();
-            _detailData[0].prototypeTexture = Grass;
+            _detailData[0].prototypeTexture = _Grass;
             _detailData[0].renderMode = DetailRenderMode.GrassBillboard;
         }
 
@@ -140,25 +140,25 @@ public class TerrainGeneratorRT : MonoBehaviour
     void FillTreeInstances(Terrain terrain)
 
     {
-        if (!_addTrees) return;
+        if (!_AddTrees) return;
 
-        for (int x = 0; x < _terrainSizeData.z; x += _treeSpacing)
+        for (int x = 0; x < _TerrainSizeData.z; x += _TreeSpacing)
         {
-            for (int z = 0; z < _terrainSizeData.z; z += _treeSpacing)
+            for (int z = 0; z < _TerrainSizeData.z; z += _TreeSpacing)
             {
 
-                float unitx = 1.0f / (_terrainSizeData.x - 1);
-                float unitz = 1.0f / (_terrainSizeData.z - 1);
+                float unitx = 1.0f / (_TerrainSizeData.x - 1);
+                float unitz = 1.0f / (_TerrainSizeData.z - 1);
 
-                float offsetX = UnityEngine.Random.value * unitx * _treeSpacing;
-                float offsetZ = UnityEngine.Random.value * unitz * _treeSpacing;
+                float offsetX = UnityEngine.Random.value * unitx * _TreeSpacing;
+                float offsetZ = UnityEngine.Random.value * unitz * _TreeSpacing;
 
                 float normX = x * unitx + offsetX;
                 float normZ = z * unitz + offsetZ;
 
                 float angle = terrain.terrainData.GetSteepness(normX, normZ);
 
-                if (angle < _treesMaxReliefSlope)
+                if (angle < _TreesMaxReliefSlope)
                 {
 
                     float ht = terrain.terrainData.GetInterpolatedHeight(normX, normZ);
@@ -185,7 +185,7 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     void FillDetailMap(Terrain terrain)
     {
-        if (!_addGrass) return;
+        if (!_AddGrass) return;
 
         int[,] grassMap = new int[(int)terrain.terrainData.size.x, (int)terrain.terrainData.size.z];
 
@@ -193,8 +193,8 @@ public class TerrainGeneratorRT : MonoBehaviour
         {
             for (int z = 0; z < terrain.terrainData.size.z; z++)
             {
-                float unitx = 1.0f / (_terrainSizeData.x - 1);
-                float unitz = 1.0f / (_terrainSizeData.z - 1);
+                float unitx = 1.0f / (_TerrainSizeData.x - 1);
+                float unitz = 1.0f / (_TerrainSizeData.z - 1);
 
                 float offsetX = UnityEngine.Random.value * unitx;
                 float offsetZ = UnityEngine.Random.value * unitz;
@@ -204,13 +204,13 @@ public class TerrainGeneratorRT : MonoBehaviour
 
                 float angle = terrain.terrainData.GetSteepness(normX, normZ);
 
-                if (angle < _grassMaxReliefSlope)
+                if (angle < _GrassMaxReliefSlope)
                     grassMap[z, x] = 1;
 
 
             }
         }
-        terrain.detailObjectDistance = _grassDistance;
+        terrain.detailObjectDistance = _GrassDistance;
         terrain.terrainData.SetDetailResolution(512, 8);
         terrain.terrainData.SetDetailLayer(0, 0, 0, grassMap);
 
@@ -220,70 +220,9 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     public void Addtexturess(TerrainData terrainData)
     {
-        if (!_addTexture) return;
-        terrainData.splatPrototypes = terrainTexture;
+        if (!_AddTexture) return;
+        terrainData.splatPrototypes = _TerrainTexture;
 
-        //float[,,] map = new float[terrainData.alphamapWidth, terrainData.alphamapHeight, terrainTexture.Length];
-
-        // terrainData.SetAlphamaps(0, 0, map);
-
-        // // Splatmap data is stored internally as a 3d array of floats, so declare a new empty array ready for your custom splatmap data:
-        // float[,,] splatmapData = new float[terrainData.alphamapWidth, terrainData.alphamapHeight, terrainData.alphamapLayers];
-        // Debug.Log(terrainData.alphamapHeight);
-        // for (int y = 0; y < terrainData.alphamapHeight; y++)
-        // {
-        //     for (int x = 0; x < terrainData.alphamapWidth; x++)
-        //     {
-        //         // Normalise x/y coordinates to range 0-1 
-        //         float y_01 = (float)y / (float)terrainData.alphamapHeight;
-        //         float x_01 = (float)x / (float)terrainData.alphamapWidth;
-
-        //         // Sample the height at this location (note GetHeight expects int coordinates corresponding to locations in the heightmap array)
-        //         float height = terrainData.GetHeight(Mathf.RoundToInt(y_01 * terrainData.heightmapHeight), Mathf.RoundToInt(x_01 * terrainData.heightmapWidth));
-
-        //         // Calculate the normal of the terrain (note this is in normalised coordinates relative to the overall terrain dimensions)
-        //         Vector3 normal = terrainData.GetInterpolatedNormal(y_01, x_01);
-
-        //         // Calculate the steepness of the terrain
-        //         float steepness = terrainData.GetSteepness(y_01, x_01);
-
-        //         // Setup an array to record the mix of texture weights at this point
-        //         float[] splatWeights = new float[terrainData.alphamapLayers];
-        //         Debug.Log(terrainData.alphamapLayers);
-        //         // CHANGE THE RULES BELOW TO SET THE WEIGHTS OF EACH TEXTURE ON WHATEVER RULES YOU WANT
-
-        //         // Texture[0] has constant influence
-        //         splatWeights[0] = 1;// Mathf.Clamp01((terrainData.heightmapHeight + height));
-
-        //         // Texture[1] is stronger at lower altitudes
-        //        // splatWeights[1] = Mathf.Clamp01((terrainData.heightmapHeight - height));
-
-        //         //// Texture[2] stronger on flatter terrain
-        //         //// Note "steepness" is unbounded, so we "normalise" it by dividing by the extent of heightmap height and scale factor
-        //         //// Subtract result from 1.0 to give greater weighting to flat surfaces
-        //         //splatWeights[2] = 1.0f - Mathf.Clamp01(steepness * steepness / (terrainData.heightmapHeight / 5.0f));
-
-        //         //// Texture[3] increases with height but only on surfaces facing positive Z axis 
-        //         //splatWeights[3] = height * Mathf.Clamp01(normal.z);
-
-        //         // Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
-        //         float z = splatWeights.Sum();
-
-        //         // Loop through each terrain texture
-        //         for (int i = 0; i < terrainData.alphamapLayers; i++)
-        //         {
-
-        //             // Normalize so that sum of all texture weights = 1
-        //             splatWeights[i] /= z;
-
-        //             // Assign this point to the splatmap array
-        //             splatmapData[x, y, i] = splatWeights[i];
-        //         }
-        //     }
-        // }
-
-        // // Finally assign the new splatmap to the terrainData:
-        // terrainData.SetAlphamaps(0, 0, splatmapData);
     }
     #endregion
 
@@ -292,13 +231,13 @@ public class TerrainGeneratorRT : MonoBehaviour
     private void SetPlayerPozition()
     {
         RaycastHit hit;
-        Ray ray = new Ray(new Vector3(_terrainSizeData.x / 2, _terrainSizeData.y, _terrainSizeData.z / 2) + Vector3.up * 100, Vector3.down);
+        Ray ray = new Ray(new Vector3(_TerrainSizeData.x / 2, _TerrainSizeData.y, _TerrainSizeData.z / 2) + Vector3.up * 100, Vector3.down);
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity))
         {
             if (hit.collider != null)
             {
-                Player.transform.position = new Vector3(_terrainSizeData.x / 2, hit.point.y + 2, _terrainSizeData.z / 2);
+                Player.transform.position = new Vector3(_TerrainSizeData.x / 2, hit.point.y + 2, _TerrainSizeData.z / 2);
             }
         }
     }
@@ -308,17 +247,17 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     private void playerMove()
     {
-        if (!_splitTerrain) return;
-        foreach (GameObject g in _terrainList)
+        if (!_SplitTerrain) return;
+        foreach (GameObject g in _TerrainList)
         {
 
-            Vector3 centre = new Vector3(g.transform.position.x + (_step / 2), 0, g.transform.position.z + (_step / 2));
+            Vector3 centre = new Vector3(g.transform.position.x + (_Step / 2), 0, g.transform.position.z + (_Step / 2));
 
             float distance = Vector3.Distance(new Vector3(Player.transform.position.x, 0, Player.transform.position.z), centre);
 
-            if (distance < _radiusOfGeneration)
+            if (distance < _RadiusOfGeneration)
                 g.SetActive(true);
-            if (distance > _radiusOfGeneration * 2)
+            if (distance > _RadiusOfGeneration * 2)
                 if (g.active)
                     g.SetActive(false);
         }
@@ -326,8 +265,8 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     private void enableAll()
     {
-        if (!_splitTerrain) return;
-        foreach (GameObject g in _terrainList)
+        if (!_SplitTerrain) return;
+        foreach (GameObject g in _TerrainList)
         {
             g.SetActive(false);
         }
@@ -341,14 +280,14 @@ public class TerrainGeneratorRT : MonoBehaviour
         _terrainData = new TerrainData
         {
             heightmapResolution = _hightMapRezaliton,
-            size = _terrainSizeData,
+            size = _TerrainSizeData,
             treePrototypes = _treeData,
             detailPrototypes = _detailData
 
 
         };
 
-        LoadTerrain(_filePath, _terrainData);
+        LoadTerrain(_FilePath, _terrainData);
         _terrainOrigin = Terrain.CreateTerrainGameObject(_terrainData);
         _terrainOrigin.transform.parent = transform;
     }
@@ -404,29 +343,29 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     public void SplitTerrain()
     {
-        if (!_splitTerrain) return;
+        if (!_SplitTerrain) return;
 
         Terrain _originalTerrain = _terrainOrigin.GetComponent<Terrain>();
         if (_originalTerrain == null) return;
 
-        _step = _originalTerrain.terrainData.size.x / _splitCount;
+        _Step = _originalTerrain.terrainData.size.x / _SplitCount;
 
-        for (int x = 0; x < _splitCount; x++)
+        for (int x = 0; x < _SplitCount; x++)
         {
 
-            for (int z = 0; z < _splitCount; z++)
+            for (int z = 0; z < _SplitCount; z++)
             {
-                float xMin = _originalTerrain.terrainData.size.x / _splitCount * x;
-                float xMax = _originalTerrain.terrainData.size.x / _splitCount * (x + 1);
-                float zMin = _originalTerrain.terrainData.size.z / _splitCount * z;
-                float zMax = _originalTerrain.terrainData.size.z / _splitCount * (z + 1);
+                float xMin = _originalTerrain.terrainData.size.x / _SplitCount * x;
+                float xMax = _originalTerrain.terrainData.size.x / _SplitCount * (x + 1);
+                float zMin = _originalTerrain.terrainData.size.z / _SplitCount * z;
+                float zMax = _originalTerrain.terrainData.size.z / _SplitCount * (z + 1);
                 copyTerrain(_originalTerrain, string.Format("{0}{1}_{2}", _originalTerrain.name, x, z), xMin, xMax, zMin, zMax, _hightMapRezaliton, _terrainData.detailResolution, _terrainData.alphamapResolution);
             }
         }
 
-        for (int x = 0; x < _splitCount; x++)
+        for (int x = 0; x < _SplitCount; x++)
         {
-            for (int z = 0; z < _splitCount; z++)
+            for (int z = 0; z < _SplitCount; z++)
             {
 
                 GameObject center = GameObject.Find(string.Format("{0}{1}_{2}", _originalTerrain.name, x, z));
@@ -545,7 +484,7 @@ public class TerrainGeneratorRT : MonoBehaviour
 
         td.size = new Vector3(xMax - xMin, origTerrain.terrainData.size.y, zMax - zMin);
 
-        _terrainList.Add(TerGameObeject);
+        _TerrainList.Add(TerGameObeject);
 
     }
 
