@@ -83,24 +83,24 @@ public class TerrainGeneratorRTEditor : Editor
             _terGen._treesMaxReliefSlope = EditorGUILayout.IntSlider("Max anngel for tree gen", _terGen._treesMaxReliefSlope, 0, 90);
             _terGen._treesPrefabCount = EditorGUILayout.IntSlider("Trees prefab count", _terGen._treesPrefabCount, 1, 24);
 
-            if (_terGen._treesPrefabCount != _terGen.Trees.Length)
+            if (_terGen._treesPrefabCount != _terGen._Trees.Length)
                 EditorGUILayout.HelpBox("Press button to recauclate Trees prefab count ", MessageType.Info);
 
             if (GUILayout.Button("Recauculate prefab count", GUILayout.ExpandWidth(false)))
             {
 
-                if (_terGen._treesPrefabCount == _terGen.Trees.Length) return;
+                if (_terGen._treesPrefabCount == _terGen._Trees.Length) return;
                 _treesArr = new GameObject[_terGen._treesPrefabCount];
-                _terGen.Trees = _treesArr;
+                _terGen._Trees = _treesArr;
 
 
             }
 
-            for (int i = 0; i < _terGen.Trees.Length; i++)
+            for (int i = 0; i < _terGen._Trees.Length; i++)
             {
 
-                _terGen.Trees[i] = (GameObject)EditorGUILayout.ObjectField("Tree prefab " + (i + 1), _terGen.Trees[i], typeof(GameObject), false);
-                if (_terGen.Trees[i] == null)
+                _terGen._Trees[i] = (GameObject)EditorGUILayout.ObjectField("Tree prefab " + (i + 1), _terGen._Trees[i], typeof(GameObject), false);
+                if (_terGen._Trees[i] == null)
                     EditorGUILayout.HelpBox("Select tree prefab ", MessageType.Error);
 
             }

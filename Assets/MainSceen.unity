@@ -113,10 +113,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &517989717 stripped
-GameObject:
-  m_PrefabParentObject: {fileID: 100000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
-  m_PrefabInternal: {fileID: 1084474809}
 --- !u!4 &517989722 stripped
 Transform:
   m_PrefabParentObject: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
@@ -286,7 +282,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &927606891
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -302,13 +298,13 @@ MonoBehaviour:
   _filePath: C:/Users/Davis/Documents/TerrainGenerator-BD/Assets/GISData/terrain.raw
   _resolutionSelected: 1
   _terrainSizeData: {x: 500, y: 500, z: 500}
-  _terrainOrigin: {fileID: 1221444362}
+  _terrainOrigin: {fileID: 0}
   _terrainData: {fileID: 1751105582}
   _hightMapRezaliton: 33
   _terrainSizeSelected: 0
   _splitTerrain: 0
   _addTexture: 0
-  _addTrees: 1
+  _addTrees: 0
   _addGrass: 1
   _splitCountID: 0
   _step: 0
@@ -326,7 +322,8 @@ MonoBehaviour:
   _grassMaxReliefSlope: 37
   Grass: {fileID: 2800000, guid: d6cdc79ec19714fcd980ca3f6ac01a0a, type: 3}
   _grassDistance: 400
-  TerTexture: {fileID: 2800000, guid: ef5c51cfa2ce46043a41a376b560c525, type: 3}
+  TerTexture1: {fileID: 0}
+  TerTexture2: {fileID: 0}
 --- !u!4 &927606892
 Transform:
   m_ObjectHideFlags: 0
@@ -336,8 +333,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 1221444365}
+  m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -395,76 +391,69 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
   m_IsPrefabParent: 0
---- !u!1 &1221444362
+--- !u!1 &1480543598
 GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   serializedVersion: 5
   m_Component:
-  - component: {fileID: 1221444365}
-  - component: {fileID: 1221444364}
-  - component: {fileID: 1221444363}
+  - component: {fileID: 1480543600}
+  - component: {fileID: 1480543599}
   m_Layer: 0
-  m_Name: Terrain
+  m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!154 &1221444363
-TerrainCollider:
+--- !u!114 &1480543599
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1221444362}
-  m_Material: {fileID: 0}
+  m_GameObject: {fileID: 1480543598}
   m_Enabled: 1
-  m_TerrainData: {fileID: 1751105582}
-  m_EnableTreeColliders: 1
---- !u!218 &1221444364
-Terrain:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1221444362}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_TerrainData: {fileID: 1751105582}
-  m_TreeDistance: 5000
-  m_TreeBillboardDistance: 50
-  m_TreeCrossFadeLength: 5
-  m_TreeMaximumFullLODCount: 50
-  m_DetailObjectDistance: 400
-  m_DetailObjectDensity: 1
-  m_HeightmapPixelError: 5
-  m_SplatMapDistance: 1000
-  m_HeightmapMaximumLOD: 0
-  m_CastShadows: 1
-  m_DrawHeightmap: 1
-  m_DrawTreesAndFoliage: 1
-  m_ReflectionProbeUsage: 1
-  m_MaterialType: 0
-  m_LegacySpecular:
-    serializedVersion: 2
-    rgba: 4286545791
-  m_LegacyShininess: 0.078125
-  m_MaterialTemplate: {fileID: 0}
-  m_BakeLightProbesForTrees: 1
-  m_ScaleInLightmap: 0.0512
-  m_LightmapParameters: {fileID: 15203, guid: 0000000000000000f000000000000000, type: 0}
---- !u!4 &1221444365
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5660bf0aaeae60b4191b9e14f7680c96, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TerrainSizeData: {x: 0, y: 0, z: 0}
+  _filePath: C:/Users/Davis/Documents/TerrainGenerator-BD/Assets/GISData/terrain.raw
+  _resolutionSelected: 1
+  _terrainSizeData: {x: 100, y: 100, z: 100}
+  _terrainOrigin: {fileID: 0}
+  _terrainData: {fileID: 0}
+  _hightMapRezaliton: 0
+  _terrainSizeSelected: 0
+  _splitTerrain: 0
+  _addTexture: 0
+  _addTrees: 0
+  _addGrass: 0
+  _splitCountID: 0
+  _step: 50
+  _treesPrefabCount: 1
+  _treeSpacing: 30
+  _treesMaxReliefSlope: 45
+  Trees: []
+  _treesArr: []
+  _grassMaxReliefSlope: 40
+  Grass: {fileID: 0}
+  _grassDistance: 400
+  TerTexture1: {fileID: 0}
+  TerTexture2: {fileID: 0}
+--- !u!4 &1480543600
 Transform:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1221444362}
+  m_GameObject: {fileID: 1480543598}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 927606892}
-  m_RootOrder: 0
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!156 &1751105582
 TerrainData:
@@ -23126,7 +23115,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ed476f69cd764b46af30ecba58fc6de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 517989717}
+  Player: {fileID: 0}
   _terrainSizeData: {x: 500, y: 500, z: 500}
   _filePath: C:/Users/Davis/Documents/TerrainGenerator-BD/Assets/GISData/terrain.raw
   _resolutionSelected: 0
@@ -23142,9 +23131,7 @@ MonoBehaviour:
   _treesPrefabCount: 2
   _treesMaxReliefSlope: 33
   _treeSpacing: 89
-  Trees:
-  - {fileID: 100000, guid: c91c1eb85782d5748ace27eb4d7415bb, type: 3}
-  - {fileID: 100016, guid: 469edab27ab6d004d84af2c4a851bd7f, type: 3}
+  _Trees: []
   _grassMaxReliefSlope: 40
   Grass: {fileID: 2800000, guid: 2c528fec5d95e4ac28cf46399b887662, type: 3}
   _grassDistance: 100

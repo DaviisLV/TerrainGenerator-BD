@@ -7,71 +7,70 @@ public class TerrainGenerator : MonoBehaviour {
 
     #region Terain_Properties
     [HideInInspector]
-    public Vector3Int TerrainSizeData;
+    public string _FilePath;
     [HideInInspector]
-    public string _filePath;
+    public int _ResolutionSelected = -1;
     [HideInInspector]
-    public int _resolutionSelected = -1;
+    public Vector3Int _TerrainSizeData;
     [HideInInspector]
-    public Vector3Int _terrainSizeData;
+    public GameObject _TerrainOrigin;
     [HideInInspector]
-    public GameObject _terrainOrigin;
+    public TerrainData _TerrainData;
     [HideInInspector]
-    public TerrainData _terrainData;
-    [HideInInspector]
-    public int _hightMapRezaliton = 0;
+    public int _HightMapRezaliton = 0;
     #endregion
 
     #region All_Booleans
     [HideInInspector]
-    public bool _terrainSizeSelected = false;    
+    public bool _TerrainSizeSelected = false;    
     [HideInInspector]
-    public bool _splitTerrain = false;
+    public bool _SplitTerrain = false;
     [HideInInspector]
-    public bool _addTexture = false;
+    public bool _AddTexture = false;
     [HideInInspector]
-    public bool _addTrees = false;
+    public bool _AddTrees = false;
     [HideInInspector]
-    public bool _addGrass = false; 
+    public bool _AddGrass = false; 
     #endregion
 
     #region Terrain_Split
     [HideInInspector]
-    public int _splitCountID;
+    public int _SplitCountID;
     [HideInInspector]
-    public float _step;
+    public float _Step;
     #endregion
 
     #region Trees_Properties  
     [HideInInspector]
-    public int _treesPrefabCount = 0;
+    public int _TreesPrefabCount = 0;
     [HideInInspector]
-    public int _treeSpacing = 30;
+    public int _TreeSpacing = 30;
     [HideInInspector]
-    public int _treesMaxReliefSlope = 45;
+    public int _TreesMaxReliefSlope = 45;
     [HideInInspector]
-    public GameObject[] Trees;
+    public GameObject[] _Trees;
     [HideInInspector]
-    public GameObject[] _treesArr;
+    public GameObject[] _TreesArr;
     [HideInInspector]
-    public TreePrototype[] _treeData;
+    public TreePrototype[] _TreeData;
     #endregion
 
     #region Grass_Properties 
     [HideInInspector]
-    public int _grassMaxReliefSlope = 40;
+    public int _GrassMaxReliefSlope = 40;
     [HideInInspector]
-    public Texture2D Grass;
+    public Texture2D _Grass;
     [HideInInspector]
-    public DetailPrototype[] _detailData;
+    public DetailPrototype[] _DetailData;
     [HideInInspector]
-    public int _grassDistance = 400;
+    public int _GrassDistance = 400;
     #endregion
 
     #region Texture_Properties
     [HideInInspector]
-    public Texture2D TerTexture;
+    public Texture2D _TerTexture;  
     [HideInInspector]
-    public SplatPrototype[] terrainTexture = new SplatPrototype[1];
+    public SplatPrototype[] _TerrainTexture = new SplatPrototype[1];
     #endregion
+
 }

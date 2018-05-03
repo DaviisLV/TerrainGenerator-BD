@@ -10,7 +10,7 @@ public class TerrainGeneratorRT : MonoBehaviour
 {
     #region  All_Variable
 
-    public GameObject player;
+    public GameObject Player;
 
     #region Terain_Properties
     [HideInInspector]
@@ -54,13 +54,13 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     #region Trees_Properties
     [HideInInspector]
-    public int _treesPrefabCount;
+    public int _treesPrefabCount =0;
     [HideInInspector]
     public int _treesMaxReliefSlope = 45;
     [HideInInspector]
     public int _treeSpacing = 30;
     [HideInInspector]
-    public GameObject[] Trees;
+    public GameObject[] _Trees = new GameObject[0];
 
     private TreePrototype[] _treeData;
     #endregion]
@@ -113,11 +113,11 @@ public class TerrainGeneratorRT : MonoBehaviour
     {
         if (_addTrees)
         {
-            _treeData = new TreePrototype[Trees.Length];
-            for (int i = 0; i < Trees.Length; i++)
+            _treeData = new TreePrototype[_Trees.Length];
+            for (int i = 0; i < _Trees.Length; i++)
             {
                 _treeData[i] = new TreePrototype();
-                _treeData[i].prefab = Trees[i];
+                _treeData[i].prefab = _Trees[i];
             }
         }
         if (_addTexture)
@@ -168,7 +168,7 @@ public class TerrainGeneratorRT : MonoBehaviour
 
                         TreeInstance temp = new TreeInstance();
                         temp.position = new Vector3(normX, ht, normZ);
-                        temp.prototypeIndex = (int)UnityEngine.Random.Range(0, Trees.Length);
+                        temp.prototypeIndex = (int)UnityEngine.Random.Range(0, _Trees.Length);
                         temp.widthScale = 1;
                         temp.heightScale = 1;
                         temp.color = Color.white;
@@ -298,7 +298,7 @@ public class TerrainGeneratorRT : MonoBehaviour
         {
             if (hit.collider != null)
             {
-                player.transform.position = new Vector3(_terrainSizeData.x / 2, hit.point.y + 2, _terrainSizeData.z / 2);
+                Player.transform.position = new Vector3(_terrainSizeData.x / 2, hit.point.y + 2, _terrainSizeData.z / 2);
             }
         }
     }
@@ -314,7 +314,7 @@ public class TerrainGeneratorRT : MonoBehaviour
 
             Vector3 centre = new Vector3(g.transform.position.x + (_step / 2), 0, g.transform.position.z + (_step / 2));
 
-            float distance = Vector3.Distance(new Vector3(player.transform.position.x, 0, player.transform.position.z), centre);
+            float distance = Vector3.Distance(new Vector3(Player.transform.position.x, 0, Player.transform.position.z), centre);
 
             if (distance < _radiusOfGeneration)
                 g.SetActive(true);
@@ -588,3 +588,4 @@ public class TerrainGeneratorRT : MonoBehaviour
     }
     #endregion
 }
+

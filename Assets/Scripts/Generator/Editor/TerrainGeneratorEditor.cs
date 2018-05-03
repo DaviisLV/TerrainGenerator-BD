@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using System;
+using System.Linq;
 
 [CustomEditor(typeof(TerrainGenerator))]
 public class TerrainGeneratorEditor : Editor
@@ -13,100 +14,93 @@ public class TerrainGeneratorEditor : Editor
     private string[] _resalution = new[] { "33×33", "65×65", "129×129", "257×257", "513×513", "1025×1025", "2049×2049", "4097×4097" };
     private int _splitCount;
 
-
-
-
-
-    public int m_detailObjectDistance = 400; //The distance at which details will no longer be drawn
-
-
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
 
         #region Select_Terrain_File
 
-        if (_terGen._filePath == null)
+        if (_terGen._FilePath == null)
             EditorGUILayout.HelpBox("Select file!", MessageType.Warning);
         else
-            EditorGUILayout.HelpBox("Selected file path: " + _terGen._filePath, MessageType.Info);
+            EditorGUILayout.HelpBox("Selected file path: " + _terGen._FilePath, MessageType.Info);
 
 
         if (GUILayout.Button("Select terrain file"))
-            _terGen._filePath = EditorUtility.OpenFilePanel("Select terrain file", "", "raw");
+            _terGen._FilePath = EditorUtility.OpenFilePanel("Select terrain file", "", "raw");
         #endregion
 
         #region Set_Terrain_Properties
 
-        if (_terGen._resolutionSelected < 0)
+        if (_terGen._ResolutionSelected < 0)
             EditorGUILayout.HelpBox("Select resalution!", MessageType.Warning);
 
         EditorGUILayout.HelpBox("Terrain resalution can be only the same as terrain file or smaller", MessageType.None);
-        _terGen._resolutionSelected = EditorGUILayout.Popup("Terain resulation: ", _terGen._resolutionSelected, _resalution);
+        _terGen._ResolutionSelected = EditorGUILayout.Popup("Terain resulation: ", _terGen._ResolutionSelected, _resalution);
 
         EditorGUILayout.HelpBox("Terrain data: X = Width, Y = Height, Z = Length", MessageType.None);
 
 
-        if (_terGen._terrainSizeData.x <= 0 || _terGen._terrainSizeData.y <= 0 || _terGen._terrainSizeData.z <= 0)
+        if (_terGen._TerrainSizeData.x <= 0 || _terGen._TerrainSizeData.y <= 0 || _terGen._TerrainSizeData.z <= 0)
             EditorGUILayout.HelpBox("Add terrain size!", MessageType.Error);
 
 
-        _terGen._terrainSizeData = EditorGUILayout.Vector3IntField("Terrain size:", _terGen._terrainSizeData);
+        _terGen._TerrainSizeData = EditorGUILayout.Vector3IntField("Terrain size:", _terGen._TerrainSizeData);
         #endregion
 
         #region Split_Terrain
-        _terGen._splitTerrain = EditorGUILayout.Toggle("Split terrain", _terGen._splitTerrain);
+        _terGen._SplitTerrain = EditorGUILayout.Toggle("Split terrain", _terGen._SplitTerrain);
 
-        if (_terGen._splitTerrain)
+        if (_terGen._SplitTerrain)
         {
-            _terGen._splitCountID = EditorGUILayout.Popup("Number of pieces", _terGen._splitCountID, _splitChoices);
+            _terGen._SplitCountID = EditorGUILayout.Popup("Number of pieces", _terGen._SplitCountID, _splitChoices);
 
-            if (_terGen._terrainSizeData.x <= _terGen._terrainSizeData.z)
-                _terGen._step = _terGen._terrainSizeData.z / (_terGen._splitCountID + 2);
+            if (_terGen._TerrainSizeData.x <= _terGen._TerrainSizeData.z)
+                _terGen._Step = _terGen._TerrainSizeData.z / (_terGen._SplitCountID + 2);
             else
-               _terGen._step = _terGen._terrainSizeData.x / (_terGen._splitCountID + 2);
+               _terGen._Step = _terGen._TerrainSizeData.x / (_terGen._SplitCountID + 2);
 
         }
         #endregion
 
         #region Add_Texture
 
-        _terGen._addTexture = EditorGUILayout.Toggle("Add Texture", _terGen._addTexture);
+        _terGen._AddTexture = EditorGUILayout.Toggle("Add Texture", _terGen._AddTexture);
 
-        if (_terGen._addTexture)
+        if (_terGen._AddTexture)
 
-            _terGen.TerTexture = (Texture2D)EditorGUILayout.ObjectField("Texture", _terGen.TerTexture, typeof(Texture2D), false);
+            _terGen._TerTexture = (Texture2D)EditorGUILayout.ObjectField("Texture", _terGen._TerTexture, typeof(Texture2D), false);
         #endregion
 
         #region Add_Trees
 
-        _terGen._addTrees = EditorGUILayout.Toggle("Add Trees", _terGen._addTrees);
-        if (_terGen._addTrees)
+        _terGen._AddTrees = EditorGUILayout.Toggle("Add Trees", _terGen._AddTrees);
+        if (_terGen._AddTrees)
         {
-            if(_terGen.Trees== null)
-            _terGen.Trees = new GameObject[0];
-            _terGen._treeSpacing = EditorGUILayout.IntSlider("Trees spacing", _terGen._treeSpacing, 1, _terGen._terrainSizeData.x / 2);
-            _terGen._treesMaxReliefSlope = EditorGUILayout.IntSlider("Max anngel for tree gen", _terGen._treesMaxReliefSlope, 0, 90);
-            _terGen._treesPrefabCount = EditorGUILayout.IntSlider("Trees prefab count", _terGen._treesPrefabCount, 1, 24);
+            if(_terGen._Trees== null)
+            _terGen._Trees = new GameObject[0];
+            _terGen._TreeSpacing = EditorGUILayout.IntSlider("Trees spacing", _terGen._TreeSpacing, 1, _terGen._TerrainSizeData.x / 2);
+            _terGen._TreesMaxReliefSlope = EditorGUILayout.IntSlider("Max anngel for tree gen", _terGen._TreesMaxReliefSlope, 0, 90);
+            _terGen._TreesPrefabCount = EditorGUILayout.IntSlider("Trees prefab count", _terGen._TreesPrefabCount, 1, 24);
 
-            if (_terGen._treesPrefabCount != _terGen.Trees.Length)
+            if (_terGen._TreesPrefabCount != _terGen._Trees.Length)
                 EditorGUILayout.HelpBox("Press button to recauclate Trees prefab count ", MessageType.Info);
 
             if (GUILayout.Button("Recauculate prefab count", GUILayout.ExpandWidth(false)))
             {
 
-                if (_terGen._treesPrefabCount == _terGen.Trees.Length) return;
-                _terGen._treesArr = new GameObject[_terGen._treesPrefabCount];
-                _terGen.Trees = _terGen._treesArr;
+                if (_terGen._TreesPrefabCount == _terGen._Trees.Length) return;
+                _terGen._TreesArr = new GameObject[_terGen._TreesPrefabCount];
+                _terGen._Trees = _terGen._TreesArr;
 
 
             }
 
-            for (int i = 0; i < _terGen.Trees.Length; i++)
+            for (int i = 0; i < _terGen._Trees.Length; i++)
             {
 
-                _terGen.Trees[i] = (GameObject)EditorGUILayout.ObjectField("Tree prefab " + (i + 1), _terGen.Trees[i], typeof(GameObject), false);
-                if (_terGen.Trees[i] == null)
+                _terGen._Trees[i] = (GameObject)EditorGUILayout.ObjectField("Tree prefab " + (i + 1), _terGen._Trees[i], typeof(GameObject), false);
+                if (_terGen._Trees[i] == null)
                     EditorGUILayout.HelpBox("Select tree prefab ", MessageType.Error);
 
             }
@@ -116,14 +110,14 @@ public class TerrainGeneratorEditor : Editor
 
         #region Add_Grass
 
-        _terGen._addGrass = EditorGUILayout.Toggle("Add Grass", _terGen._addGrass);
-        if (_terGen._addGrass)
+        _terGen._AddGrass = EditorGUILayout.Toggle("Add Grass", _terGen._AddGrass);
+        if (_terGen._AddGrass)
         {
 
-            _terGen._grassMaxReliefSlope = EditorGUILayout.IntSlider("Max angel for grass gen", _terGen._grassMaxReliefSlope, 0, 90);
-            _terGen.Grass = (Texture2D)EditorGUILayout.ObjectField("Grass texture", _terGen.Grass, typeof(Texture2D), false);
+            _terGen._GrassMaxReliefSlope = EditorGUILayout.IntSlider("Max angel for grass gen", _terGen._GrassMaxReliefSlope, 0, 90);
+            _terGen._Grass = (Texture2D)EditorGUILayout.ObjectField("Grass texture", _terGen._Grass, typeof(Texture2D), false);
             EditorGUILayout.HelpBox("Distance at which details will no longer be drawn", MessageType.None);
-            _terGen._grassDistance = EditorGUILayout.IntField("Distance", _terGen._grassDistance);
+            _terGen._GrassDistance = EditorGUILayout.IntField("Distance", _terGen._GrassDistance);
 
         }
         #endregion
@@ -140,14 +134,14 @@ public class TerrainGeneratorEditor : Editor
             RemoveTerrain();
             CreateProtoTypes();
             CreateTerrain();
-            if (_terGen._addTexture)
-                Addtexturess(_terGen._terrainData);
-            if (_terGen._addTrees)
-                FillTreeInstances(_terGen._terrainOrigin.GetComponent<Terrain>());
-            if (_terGen._addGrass)
-                FillDetailMap(_terGen._terrainOrigin.GetComponent<Terrain>());
+            if (_terGen._AddTexture)
+                Addtexturess(_terGen._TerrainData);
+            if (_terGen._AddTrees)
+                FillTreeInstances(_terGen._TerrainOrigin.GetComponent<Terrain>());
+            if (_terGen._AddGrass)
+                FillDetailMap(_terGen._TerrainOrigin.GetComponent<Terrain>());
 
-            if (_terGen._splitTerrain)
+            if (_terGen._SplitTerrain)
                 SplitTerrain();
 
         }
@@ -178,32 +172,33 @@ public class TerrainGeneratorEditor : Editor
 
     void CreateProtoTypes()
     {
-        if (_terGen._addTrees)
+        if (_terGen._AddTrees)
         {
-            _terGen._treeData = new TreePrototype[_terGen.Trees.Length];
-            for (int i = 0; i < _terGen.Trees.Length; i++)
+            _terGen._TreeData = new TreePrototype[_terGen._Trees.Length];
+            for (int i = 0; i < _terGen._Trees.Length; i++)
             {
                
-                _terGen._treeData[i] = new TreePrototype();
-                _terGen._treeData[i].prefab = _terGen.Trees[i];
+                _terGen._TreeData[i] = new TreePrototype();
+                _terGen._TreeData[i].prefab = _terGen._Trees[i];
 
             }
         }
-        if (_terGen._addTexture)
+        if (_terGen._AddTexture)
         {
-           _terGen.terrainTexture[0] = new SplatPrototype();
-           _terGen.terrainTexture[0].texture = _terGen.TerTexture;
+           _terGen._TerrainTexture[0] = new SplatPrototype();
+           _terGen._TerrainTexture[0].texture = _terGen._TerTexture;
+
         }
 
 
 
-        if (_terGen._addGrass)
+        if (_terGen._AddGrass)
         {
-            _terGen._detailData = new DetailPrototype[1];
+            _terGen._DetailData = new DetailPrototype[1];
 
-            _terGen._detailData[0] = new DetailPrototype();
-            _terGen._detailData[0].prototypeTexture = _terGen.Grass;
-            _terGen._detailData[0].renderMode = DetailRenderMode.GrassBillboard;
+            _terGen._DetailData[0] = new DetailPrototype();
+            _terGen._DetailData[0].prototypeTexture = _terGen._Grass;
+            _terGen._DetailData[0].renderMode = DetailRenderMode.GrassBillboard;
         }
 
     }
@@ -211,25 +206,25 @@ public class TerrainGeneratorEditor : Editor
     void FillTreeInstances(Terrain terrain)
 
     {
-        if (!_terGen._addTrees) return;
+        if (!_terGen._AddTrees) return;
 
-        for (int x = 0; x < _terGen._terrainSizeData.z; x += _terGen._treeSpacing)
+        for (int x = 0; x < _terGen._TerrainSizeData.z; x += _terGen._TreeSpacing)
         {
-            for (int z = 0; z < _terGen._terrainSizeData.z; z += _terGen._treeSpacing)
+            for (int z = 0; z < _terGen._TerrainSizeData.z; z += _terGen._TreeSpacing)
             {
 
-                float unitx = 1.0f / (_terGen._terrainSizeData.x - 1);
-                float unitz = 1.0f / (_terGen._terrainSizeData.z - 1);
+                float unitx = 1.0f / (_terGen._TerrainSizeData.x - 1);
+                float unitz = 1.0f / (_terGen._TerrainSizeData.z - 1);
 
-                float offsetX = UnityEngine.Random.value * unitx * _terGen._treeSpacing;
-                float offsetZ = UnityEngine.Random.value * unitz * _terGen._treeSpacing;
+                float offsetX = UnityEngine.Random.value * unitx * _terGen._TreeSpacing;
+                float offsetZ = UnityEngine.Random.value * unitz * _terGen._TreeSpacing;
 
                 float normX = x * unitx + offsetX;
                 float normZ = z * unitz + offsetZ;
 
                 float angle = terrain.terrainData.GetSteepness(normX, normZ);
 
-                if (angle < _terGen._treesMaxReliefSlope)
+                if (angle < _terGen._TreesMaxReliefSlope)
                 {
 
                     float ht = terrain.terrainData.GetInterpolatedHeight(normX, normZ);
@@ -239,7 +234,7 @@ public class TerrainGeneratorEditor : Editor
 
                         TreeInstance temp = new TreeInstance();
                         temp.position = new Vector3(normX, ht, normZ);
-                        temp.prototypeIndex = (int)UnityEngine.Random.Range(0, _terGen.Trees.Length);
+                        temp.prototypeIndex = (int)UnityEngine.Random.Range(0, _terGen._Trees.Length);
                         temp.widthScale = 1;
                         temp.heightScale = 1;
                         temp.color = Color.white;
@@ -256,7 +251,7 @@ public class TerrainGeneratorEditor : Editor
     void FillDetailMap(Terrain terrain)
     {
        
-        if (!_terGen._addGrass) return;
+        if (!_terGen._AddGrass) return;
 
         int[,] detailMap0 = new int[(int)terrain.terrainData.size.x, (int)terrain.terrainData.size.z];
 
@@ -264,8 +259,8 @@ public class TerrainGeneratorEditor : Editor
         {
             for (int z = 0; z < terrain.terrainData.size.z; z++)
             {
-                float unitx = 1.0f / (_terGen._terrainSizeData.x - 1);
-                float unitz = 1.0f / (_terGen._terrainSizeData.z - 1);
+                float unitx = 1.0f / (_terGen._TerrainSizeData.x - 1);
+                float unitz = 1.0f / (_terGen._TerrainSizeData.z - 1);
 
                 float offsetX = UnityEngine.Random.value * unitx;
                 float offsetZ = UnityEngine.Random.value * unitz;
@@ -275,7 +270,7 @@ public class TerrainGeneratorEditor : Editor
 
                 float angle = terrain.terrainData.GetSteepness(normX, normZ);
 
-                if (angle < _terGen._treesMaxReliefSlope)
+                if (angle < _terGen._TreesMaxReliefSlope)
 
                     detailMap0[z, x] = 1;
      
@@ -283,7 +278,7 @@ public class TerrainGeneratorEditor : Editor
             }
         }
 
-        terrain.detailObjectDistance = _terGen._grassDistance;
+        terrain.detailObjectDistance = _terGen._GrassDistance;
         terrain.terrainData.SetDetailResolution(512, 8);
         terrain.terrainData.SetDetailLayer(0, 0, 0, detailMap0);
 
@@ -293,70 +288,71 @@ public class TerrainGeneratorEditor : Editor
 
     public void Addtexturess(TerrainData terrainData)
     {
-        if (!_terGen._addTexture) return;
-        terrainData.splatPrototypes = _terGen.terrainTexture;
+        if (!_terGen._AddTexture) return;
 
-        //float[,,] map = new float[terrainData.alphamapWidth, terrainData.alphamapHeight, terrainTexture.Length];
+        terrainData.splatPrototypes = _terGen._TerrainTexture;
 
-        // terrainData.SetAlphamaps(0, 0, map);
+        //float[,,] map = new float[terrainData.alphamapWidth, terrainData.alphamapHeight,2];
 
-        // // Splatmap data is stored internally as a 3d array of floats, so declare a new empty array ready for your custom splatmap data:
-        // float[,,] splatmapData = new float[terrainData.alphamapWidth, terrainData.alphamapHeight, terrainData.alphamapLayers];
-        // Debug.Log(terrainData.alphamapHeight);
-        // for (int y = 0; y < terrainData.alphamapHeight; y++)
-        // {
-        //     for (int x = 0; x < terrainData.alphamapWidth; x++)
-        //     {
-        //         // Normalise x/y coordinates to range 0-1 
-        //         float y_01 = (float)y / (float)terrainData.alphamapHeight;
-        //         float x_01 = (float)x / (float)terrainData.alphamapWidth;
+        //terrainData.SetAlphamaps(0, 0, map);
 
-        //         // Sample the height at this location (note GetHeight expects int coordinates corresponding to locations in the heightmap array)
-        //         float height = terrainData.GetHeight(Mathf.RoundToInt(y_01 * terrainData.heightmapHeight), Mathf.RoundToInt(x_01 * terrainData.heightmapWidth));
+        //// Splatmap data is stored internally as a 3d array of floats, so declare a new empty array ready for your custom splatmap data:
+        //float[,,] splatmapData = new float[terrainData.alphamapWidth, terrainData.alphamapHeight, terrainData.alphamapLayers];
+        //Debug.Log(terrainData.alphamapHeight);
+        //for (int y = 0; y < terrainData.alphamapHeight; y++)
+        //{
+        //    for (int x = 0; x < terrainData.alphamapWidth; x++)
+        //    {
+        //        // Normalise x/y coordinates to range 0-1 
+        //        float y_01 = (float)y / (float)terrainData.alphamapHeight;
+        //        float x_01 = (float)x / (float)terrainData.alphamapWidth;
 
-        //         // Calculate the normal of the terrain (note this is in normalised coordinates relative to the overall terrain dimensions)
-        //         Vector3 normal = terrainData.GetInterpolatedNormal(y_01, x_01);
+        //        // Sample the height at this location (note GetHeight expects int coordinates corresponding to locations in the heightmap array)
+        //        float height = terrainData.GetHeight(Mathf.RoundToInt(y_01 * terrainData.heightmapHeight), Mathf.RoundToInt(x_01 * terrainData.heightmapWidth));
 
-        //         // Calculate the steepness of the terrain
-        //         float steepness = terrainData.GetSteepness(y_01, x_01);
+        //        // Calculate the normal of the terrain (note this is in normalised coordinates relative to the overall terrain dimensions)
+        //        Vector3 normal = terrainData.GetInterpolatedNormal(y_01, x_01);
 
-        //         // Setup an array to record the mix of texture weights at this point
-        //         float[] splatWeights = new float[terrainData.alphamapLayers];
-        //         Debug.Log(terrainData.alphamapLayers);
-        //         // CHANGE THE RULES BELOW TO SET THE WEIGHTS OF EACH TEXTURE ON WHATEVER RULES YOU WANT
+        //        // Calculate the steepness of the terrain
+        //        float steepness = terrainData.GetSteepness(y_01, x_01);
 
-        //         // Texture[0] has constant influence
-        //         splatWeights[0] = 1;// Mathf.Clamp01((terrainData.heightmapHeight + height));
+        //        // Setup an array to record the mix of texture weights at this point
+        //        float[] splatWeights = new float[terrainData.alphamapLayers];
+        //        Debug.Log(terrainData.alphamapLayers);
+        //        // CHANGE THE RULES BELOW TO SET THE WEIGHTS OF EACH TEXTURE ON WHATEVER RULES YOU WANT
 
-        //         // Texture[1] is stronger at lower altitudes
-        //        // splatWeights[1] = Mathf.Clamp01((terrainData.heightmapHeight - height));
+        //        // Texture[0] has constant influence
+        //        splatWeights[0] = 1;// Mathf.Clamp01((terrainData.heightmapHeight + height));
 
-        //         //// Texture[2] stronger on flatter terrain
-        //         //// Note "steepness" is unbounded, so we "normalise" it by dividing by the extent of heightmap height and scale factor
-        //         //// Subtract result from 1.0 to give greater weighting to flat surfaces
-        //         //splatWeights[2] = 1.0f - Mathf.Clamp01(steepness * steepness / (terrainData.heightmapHeight / 5.0f));
+        //        // Texture[1] is stronger at lower altitudes
+        //         splatWeights[1] = Mathf.Clamp01((terrainData.heightmapHeight - height));
 
-        //         //// Texture[3] increases with height but only on surfaces facing positive Z axis 
-        //         //splatWeights[3] = height * Mathf.Clamp01(normal.z);
+        //        //// Texture[2] stronger on flatter terrain
+        //        //// Note "steepness" is unbounded, so we "normalise" it by dividing by the extent of heightmap height and scale factor
+        //        //// Subtract result from 1.0 to give greater weighting to flat surfaces
+        //        //splatWeights[2] = 1.0f - Mathf.Clamp01(steepness * steepness / (terrainData.heightmapHeight / 5.0f));
 
-        //         // Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
-        //         float z = splatWeights.Sum();
+        //        //// Texture[3] increases with height but only on surfaces facing positive Z axis 
+        //        //splatWeights[3] = height * Mathf.Clamp01(normal.z);
 
-        //         // Loop through each terrain texture
-        //         for (int i = 0; i < terrainData.alphamapLayers; i++)
-        //         {
+        //        // Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
+        //        float z = splatWeights.Sum();
 
-        //             // Normalize so that sum of all texture weights = 1
-        //             splatWeights[i] /= z;
+        //        // Loop through each terrain texture
+        //        for (int i = 0; i < terrainData.alphamapLayers; i++)
+        //        {
 
-        //             // Assign this point to the splatmap array
-        //             splatmapData[x, y, i] = splatWeights[i];
-        //         }
-        //     }
-        // }
+        //            // Normalize so that sum of all texture weights = 1
+        //            splatWeights[i] /= z;
 
-        // // Finally assign the new splatmap to the terrainData:
-        // terrainData.SetAlphamaps(0, 0, splatmapData);
+        //            // Assign this point to the splatmap array
+        //            splatmapData[x, y, i] = splatWeights[i];
+        //        }
+        //    }
+        //}
+
+        //// Finally assign the new splatmap to the terrainData:
+        //terrainData.SetAlphamaps(0, 0, splatmapData);
     }
     #endregion
 
@@ -364,18 +360,18 @@ public class TerrainGeneratorEditor : Editor
 
     public void CreateTerrain()
     {
-        _terGen._hightMapRezaliton = GetTerrainRezalution(_terGen._splitCountID);
-        _terGen._terrainData = new TerrainData
+        _terGen._HightMapRezaliton = GetTerrainRezalution(_terGen._SplitCountID);
+        _terGen._TerrainData = new TerrainData
         {
-            heightmapResolution = _terGen._hightMapRezaliton,
-            size = _terGen._terrainSizeData,
-            treePrototypes = _terGen._treeData,
-            detailPrototypes = _terGen._detailData
+            heightmapResolution = _terGen._HightMapRezaliton,
+            size = _terGen._TerrainSizeData,
+            treePrototypes = _terGen._TreeData,
+            detailPrototypes = _terGen._DetailData
         };
 
-        LoadTerrain(_terGen._filePath, _terGen._terrainData);
-        _terGen._terrainOrigin = Terrain.CreateTerrainGameObject(_terGen._terrainData);
-        _terGen._terrainOrigin.transform.parent = _terGen.transform;
+        LoadTerrain(_terGen._FilePath, _terGen._TerrainData);
+        _terGen._TerrainOrigin = Terrain.CreateTerrainGameObject(_terGen._TerrainData);
+        _terGen._TerrainOrigin.transform.parent = _terGen.transform;
 
     }
 
@@ -430,12 +426,12 @@ public class TerrainGeneratorEditor : Editor
     public void SplitTerrain()
     {
 
-        _splitCount = _terGen._splitCountID + 2;
+        _splitCount = _terGen._SplitCountID + 2;
 
-        Terrain _originalTerrain = _terGen._terrainOrigin.GetComponent<Terrain>();
+        Terrain _originalTerrain = _terGen._TerrainOrigin.GetComponent<Terrain>();
         if (_originalTerrain == null) return;
 
-        _terGen._step = _originalTerrain.terrainData.size.x / _splitCount;
+        _terGen._Step = _originalTerrain.terrainData.size.x / _splitCount;
 
         for (int x = 0; x < _splitCount; x++)
         {
@@ -447,7 +443,7 @@ public class TerrainGeneratorEditor : Editor
                 float zMin = _originalTerrain.terrainData.size.z / _splitCount * z;
                 float zMax = _originalTerrain.terrainData.size.z / _splitCount * (z + 1);
 
-                copyTerrain(_originalTerrain, string.Format("{0}{1}_{2}", _originalTerrain.name, x, z), xMin, xMax, zMin, zMax, _terGen._hightMapRezaliton, _terGen._terrainData.detailResolution, _terGen._terrainData.alphamapResolution);
+                copyTerrain(_originalTerrain, string.Format("{0}{1}_{2}", _originalTerrain.name, x, z), xMin, xMax, zMin, zMax, _terGen._HightMapRezaliton, _terGen._TerrainData.detailResolution, _terGen._TerrainData.alphamapResolution);
             }
         }
 
@@ -465,7 +461,7 @@ public class TerrainGeneratorEditor : Editor
 
         }
 
-        DestroyImmediate(_terGen._terrainOrigin);
+        DestroyImmediate(_terGen._TerrainOrigin);
     }
 
 
