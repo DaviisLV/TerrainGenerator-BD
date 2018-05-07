@@ -299,7 +299,7 @@ public class TerrainGeneratorEditor : Editor
 
     public void CreateTerrain()
     {
-        _terGen._HightMapRezaliton = GetTerrainRezalution(_terGen._SplitCountID);
+        _terGen._HightMapRezaliton = GetTerrainRezalution(_terGen._ResolutionSelected);
         _terGen._TerrainData = new TerrainData
         {
             heightmapResolution = _terGen._HightMapRezaliton,
