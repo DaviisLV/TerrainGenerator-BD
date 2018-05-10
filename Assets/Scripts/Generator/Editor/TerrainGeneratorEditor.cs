@@ -394,7 +394,6 @@ public class TerrainGeneratorEditor : Editor
             {
 
                 GameObject center = GameObject.Find(string.Format("{0}{1}_{2}", _originalTerrain.name, x, z));
-                Debug.Log(center);
                 GameObject left = GameObject.Find(string.Format("{0}{1}_{2}", _originalTerrain.name, x - 1, z));
                 GameObject top = GameObject.Find(string.Format("{0}{1}_{2}", _originalTerrain.name, x, z + 1));
                 stitchTerrain(center, left, top);
