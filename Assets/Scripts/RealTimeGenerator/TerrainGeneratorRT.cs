@@ -9,7 +9,7 @@ using System.Linq;
 public class TerrainGeneratorRT : MonoBehaviour
 {
     #region  All_Variable
-
+    // The object that moves through the terrain 
     public GameObject Player;
 
     #region Terain_Properties
@@ -86,24 +86,25 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     #endregion
 
-
     public void Start()
     {
+        //Get terrain resalution
         _hightMapRezaliton = GetTerrainRezalution(_ResolutionSelected);
+        //Get split count
         _SplitCount = _SplitCountID + 2;
         CreateProtoTypes();
         CreateTerrain();
         FillTreeInstances(_terrainOrigin.GetComponent<Terrain>());
         FillDetailMap(_terrainOrigin.GetComponent<Terrain>());
-        Addtexturess(_terrainData);
+        AddTerrainTexture(_terrainData);
         SplitTerrain();
         enableAll();
         SetPlayerPozition();
-
     }
 
     private void Update()
     {
+        // Check Object movment
         playerMove();
     }
 
@@ -218,7 +219,7 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     }
 
-    public void Addtexturess(TerrainData terrainData)
+    public void AddTerrainTexture(TerrainData terrainData)
     {
         if (!_AddTexture) return;
         terrainData.splatPrototypes = _TerrainTexture;
@@ -227,7 +228,7 @@ public class TerrainGeneratorRT : MonoBehaviour
     #endregion
 
     #region Set_Player_Start_Position
-
+    //Place Player object in the midle of terrain
     private void SetPlayerPozition()
     {
         RaycastHit hit;
@@ -277,6 +278,7 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     public void CreateTerrain()
     {
+        //Create terrain data and generate terrain
         _terrainData = new TerrainData
         {
             heightmapResolution = _hightMapRezaliton,
@@ -311,7 +313,7 @@ public class TerrainGeneratorRT : MonoBehaviour
         }
         aTerrain.SetHeights(0, 0, data);
     }
-
+    //Resaluton from editor script
     private int GetTerrainRezalution(int arrayIndex)
     {
         switch (arrayIndex)
@@ -340,7 +342,7 @@ public class TerrainGeneratorRT : MonoBehaviour
     #endregion
 
     #region Split_Terrain
-
+    
     public void SplitTerrain()
     {
         if (!_SplitTerrain) return;
@@ -349,7 +351,7 @@ public class TerrainGeneratorRT : MonoBehaviour
         if (_originalTerrain == null) return;
 
         _Step = _originalTerrain.terrainData.size.x / _SplitCount;
-
+        //splite terrain
         for (int x = 0; x < _SplitCount; x++)
         {
 
@@ -362,7 +364,7 @@ public class TerrainGeneratorRT : MonoBehaviour
                 copyTerrain(_originalTerrain, string.Format("{0}{1}_{2}", _originalTerrain.name, x, z), xMin, xMax, zMin, zMax, _hightMapRezaliton, _terrainData.detailResolution, _terrainData.alphamapResolution);
             }
         }
-
+        //Put terrain beck together
         for (int x = 0; x < _SplitCount; x++)
         {
             for (int z = 0; z < _SplitCount; z++)
@@ -375,7 +377,7 @@ public class TerrainGeneratorRT : MonoBehaviour
             }
 
         }
-
+        //Destroy original
         Destroy(_terrainOrigin);
     }
 
@@ -389,7 +391,7 @@ public class TerrainGeneratorRT : MonoBehaviour
         GameObject TerGameObeject = Terrain.CreateTerrainGameObject(td);
         Terrain newTerrain = TerGameObeject.GetComponent<Terrain>();
 
-        // Copy over all vars
+        // Copy over all values
         newTerrain.bakeLightProbesForTrees = origTerrain.bakeLightProbesForTrees;
         newTerrain.basemapDistance = origTerrain.basemapDistance;
         newTerrain.castShadows = origTerrain.castShadows;
@@ -426,7 +428,7 @@ public class TerrainGeneratorRT : MonoBehaviour
 
         float dimRatio1, dimRatio2;
 
-        // Height
+        //Set height for split terrain part
         td.heightmapResolution = heightmapResolution;
         float[,] newHeights = new float[heightmapResolution, heightmapResolution];
         dimRatio1 = (xMax - xMin) / heightmapResolution;
@@ -444,7 +446,7 @@ public class TerrainGeneratorRT : MonoBehaviour
 
         td.alphamapResolution = alphamapResolution;
 
-        // Tree
+        // Set tree for split terrain part
         for (int i = 0; i < origTerrain.terrainData.treeInstanceCount; i++)
         {
             TreeInstance ti = origTerrain.terrainData.treeInstances[i];
@@ -455,7 +457,7 @@ public class TerrainGeneratorRT : MonoBehaviour
             ti.position = new Vector3(((ti.position.x * origTerrain.terrainData.size.x) - xMin) / (xMax - xMin), ti.position.y, ((ti.position.z * origTerrain.terrainData.size.z) - zMin) / (zMax - zMin));
             newTerrain.AddTreeInstance(ti);
         }
-        //grass
+        //Set grass for split terrain part
         for (int layer = 0; layer < origTerrain.terrainData.detailPrototypes.Length; layer++)
         {
             int[,] detailLayer = origTerrain.terrainData.GetDetailLayer(
@@ -491,6 +493,7 @@ public class TerrainGeneratorRT : MonoBehaviour
 
     void stitchTerrain(GameObject center, GameObject left, GameObject top)
     {
+        //Connect the relief areas created in the correct order
         if (center == null)
             return;
         Terrain centerTerrain = center.GetComponent<Terrain>();

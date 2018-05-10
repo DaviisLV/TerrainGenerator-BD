@@ -8,8 +8,11 @@ using System.Linq;
 [CustomEditor(typeof(TerrainGeneratorRT))]
 public class TerrainGeneratorRTEditor : Editor
 {
+    // Connect to TerrainGeneratorRT script
     private TerrainGeneratorRT _terGen;
+    // Amount of pieces in which to split the terrain
     private string[] _choices = new[] { "4", "9", "16", "25", "36", "49", "64", "81", "100", "121", "144", "169", "196", "225" };
+    // Possible resolution 
     private string[] _resalution = new[] { "33×33", "65×65", "129×129", "257×257", "513×513", "1025×1025", "2049×2049", "4097×4097" };
     private int _step;
     private GameObject[] _treesArr;

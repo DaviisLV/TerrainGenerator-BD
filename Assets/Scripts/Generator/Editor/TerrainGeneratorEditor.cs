@@ -8,9 +8,12 @@ using System.Linq;
 
 [CustomEditor(typeof(TerrainGenerator))]
 public class TerrainGeneratorEditor : Editor
-{
+{ 
+    // Connect to TerrainGenerator script
     private TerrainGenerator _terGen;
+    // Amount of pieces in which to split the terrain
     private string[] _splitChoices = new[] { "4", "9", "16", "25", "36", "49", "64", "81", "100", "121", "144", "169", "196", "225" };
+    // Possible resolution 
     private string[] _resalution = new[] { "33×33", "65×65", "129×129", "257×257", "513×513", "1025×1025", "2049×2049", "4097×4097" };
     private int _splitCount;
 
@@ -131,6 +134,7 @@ public class TerrainGeneratorEditor : Editor
 
         if (GUILayout.Button("Create Terrain"))
         {
+            //Remove previus to avoid overlap
             RemoveTerrain();
             CreateProtoTypes();
             CreateTerrain();
@@ -282,8 +286,6 @@ public class TerrainGeneratorEditor : Editor
         terrain.terrainData.SetDetailResolution(512, 8);
         terrain.terrainData.SetDetailLayer(0, 0, 0, detailMap0);
 
-
-
     }
 
     public void Addtexturess(TerrainData terrainData)
@@ -296,7 +298,7 @@ public class TerrainGeneratorEditor : Editor
     #endregion
 
     #region Create terran from file
-
+    //Create terrain data and generate terrain
     public void CreateTerrain()
     {
         _terGen._HightMapRezaliton = GetTerrainRezalution(_terGen._ResolutionSelected);
@@ -371,7 +373,7 @@ public class TerrainGeneratorEditor : Editor
         if (_originalTerrain == null) return;
 
         _terGen._Step = _originalTerrain.terrainData.size.x / _splitCount;
-
+        //splite terrain
         for (int x = 0; x < _splitCount; x++)
         {
 
@@ -385,7 +387,7 @@ public class TerrainGeneratorEditor : Editor
                 copyTerrain(_originalTerrain, string.Format("{0}{1}_{2}", _originalTerrain.name, x, z), xMin, xMax, zMin, zMax, _terGen._HightMapRezaliton, _terGen._TerrainData.detailResolution, _terGen._TerrainData.alphamapResolution);
             }
         }
-
+        //Put terrain beck together
         for (int x = 0; x < _splitCount; x++)
         {
             for (int z = 0; z < _splitCount; z++)
@@ -399,7 +401,7 @@ public class TerrainGeneratorEditor : Editor
             }
 
         }
-
+        //Destroy original
         DestroyImmediate(_terGen._TerrainOrigin);
     }
 
@@ -413,6 +415,7 @@ public class TerrainGeneratorEditor : Editor
         GameObject TerGameObeject = Terrain.CreateTerrainGameObject(td);
         Terrain newTerrain = TerGameObeject.GetComponent<Terrain>();
 
+        // Copy over all values
         newTerrain.bakeLightProbesForTrees = origTerrain.bakeLightProbesForTrees;
         newTerrain.basemapDistance = origTerrain.basemapDistance;
         newTerrain.castShadows = origTerrain.castShadows;
@@ -448,6 +451,7 @@ public class TerrainGeneratorEditor : Editor
         float zMaxNorm = zMax / origTerrain.terrainData.size.z;
         float dimRatio1, dimRatio2;
 
+        //Set height for split terrain part
         td.heightmapResolution = heightmapResolution;
         float[,] newHeights = new float[heightmapResolution, heightmapResolution];
         dimRatio1 = (xMax - xMin) / heightmapResolution;
@@ -466,7 +470,7 @@ public class TerrainGeneratorEditor : Editor
         td.alphamapResolution = alphamapResolution;
 
 
-        // Tree
+        // Set tree for split terrain part
         for (int i = 0; i < origTerrain.terrainData.treeInstanceCount; i++)
         {
             TreeInstance ti = origTerrain.terrainData.treeInstances[i];
@@ -477,7 +481,7 @@ public class TerrainGeneratorEditor : Editor
             ti.position = new Vector3(((ti.position.x * origTerrain.terrainData.size.x) - xMin) / (xMax - xMin), ti.position.y, ((ti.position.z * origTerrain.terrainData.size.z) - zMin) / (zMax - zMin));
             newTerrain.AddTreeInstance(ti);
         }
-        //grass
+        //Set grass for split terrain part
         for (int layer = 0; layer < origTerrain.terrainData.detailPrototypes.Length; layer++)
         {
             int[,] detailLayer = origTerrain.terrainData.GetDetailLayer(
@@ -508,6 +512,7 @@ public class TerrainGeneratorEditor : Editor
 
     void stitchTerrain(GameObject center, GameObject left, GameObject top)
     {
+        //Connect the relief areas created in the correct order
         if (center == null)
             return;
         Terrain centerTerrain = center.GetComponent<Terrain>();

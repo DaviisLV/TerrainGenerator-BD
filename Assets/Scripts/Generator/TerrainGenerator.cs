@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 
 public class TerrainGenerator : MonoBehaviour {
-
+    // Scripts saves all variable values
     #region Terain_Properties
     [HideInInspector]
     public string _FilePath;
